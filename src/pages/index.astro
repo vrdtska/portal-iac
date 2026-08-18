@@ -1,17 +1,116 @@
 ---
+import { getCollection } from 'astro:content';
 
+// 1. Obtener todas las tareas y ejercicios guiados
+const tareas = await getCollection('tareas');
+const guiados = await getCollection('guiados');
+
+// 2. Ordenar por fecha más reciente
+const ultimasTareas = tareas
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 4);
+
+const ultimosGuiados = guiados
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 4);
+
+const parciales = [
+  { id: 'parcial-1', label: 'Parcial 1', desc: 'Fundamentos y estructuras iniciales' },
+  { id: 'parcial-2', label: 'Parcial 2', desc: 'Algoritmos avanzados y grafos' },
+  { id: 'proyecto-final', label: 'Proyecto Final', desc: 'Integración y entrega final' },
+];
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portal de la Materia</title>
+  </head>
+  <body class="bg-zinc-50 text-zinc-900 min-h-screen">
+    <!-- Navbar simple -->
+    <header class="border-b border-zinc-200 bg-white sticky top-0 z-10">
+      <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <span class="font-bold text-lg tracking-tight">Portal Materia</span>
+        <nav class="flex gap-6 text-sm font-medium">
+          <a href="/tareas" class="text-zinc-600 hover:text-zinc-900 transition">Tareas</a>
+          <a href="/guiados" class="text-zinc-600 hover:text-zinc-900 transition">Ejercicios Guiados</a>
+          <a href="/admin" target="_blank" class="px-3 py-1 bg-zinc-900 text-white rounded-md text-xs hover:bg-zinc-700 transition">Panel Admin</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 py-10 space-y-12">
+      <!-- Hero Banner -->
+      <section class="bg-white border border-zinc-200 rounded-2xl p-8">
+        <h1 class="text-3xl font-extrabold tracking-tight">Ejercicios Guiados y Tareas</h1>
+        <p class="text-zinc-600 mt-2 max-w-2xl">
+          Repositorio central de actividades prácticas, código fuente base y especificaciones de entrega por parcial.
+        </p>
+      </section>
+
+      <!-- Bloques por Parcial -->
+      <section>
+        <h2 class="text-xl font-bold mb-4">Explorar por Etapa</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {parciales.map((p) => {
+            const numTareas = tareas.filter(t => t.data.parcial === p.id).length;
+            const numGuiados = guiados.filter(g => g.data.parcial === p.id).length;
+
+            return (
+              <div class="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm flex flex-col justify-between">
+                <div>
+                  <h3 class="font-bold text-lg">{p.label}</h3>
+                  <p class="text-sm text-zinc-500 mt-1">{p.desc}</p>
+                </div>
+                <div class="mt-6 pt-4 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-600">
+                  <span>{numTareas} tareas</span>
+                  <span>{numGuiados} guiados</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <!-- Actividades Recientes en 2 Columnas -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Columna: Tareas Recientes -->
+        <section class="bg-white border border-zinc-200 rounded-xl p-6">
+          <div class="flex items-center justify-between mb-4 border-b border-zinc-100 pb-3">
+            <h2 class="font-bold text-lg">Últimas Tareas</h2>
+            <a href="/tareas" class="text-xs text-blue-600 font-semibold hover:underline">Ver todas →</a>
+          </div>
+          <ul class="space-y-3">
+            {ultimasTareas.map((t) => (
+              <li>
+                <a href={`/tareas/${t.slug}`} class="block p-3 rounded-lg hover:bg-zinc-50 border border-transparent hover:border-zinc-200 transition">
+                  <div class="text-xs font-semibold text-zinc-400 uppercase">{t.data.parcial.replace('-', ' ')}</div>
+                  <div class="font-medium text-sm text-zinc-800">{t.data.title}</div>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <!-- Columna: Guiados Recientes -->
+        <section class="bg-white border border-zinc-200 rounded-xl p-6">
+          <div class="flex items-center justify-between mb-4 border-b border-zinc-100 pb-3">
+            <h2 class="font-bold text-lg">Ejercicios Guiados Recientes</h2>
+            <a href="/guiados" class="text-xs text-blue-600 font-semibold hover:underline">Ver todos →</a>
+          </div>
+          <ul class="space-y-3">
+            {ultimosGuiados.map((g) => (
+              <li>
+                <a href={`/guiados/${g.slug}`} class="block p-3 rounded-lg hover:bg-zinc-50 border border-transparent hover:border-zinc-200 transition">
+                  <div class="text-xs font-semibold text-zinc-400 uppercase">{g.data.parcial.replace('-', ' ')}</div>
+                  <div class="font-medium text-sm text-zinc-800">{g.data.title}</div>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+    </main>
+  </body>
 </html>

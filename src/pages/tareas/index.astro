@@ -1,0 +1,44 @@
+---
+import { getCollection } from 'astro:content';
+
+const allTareas = await getCollection('tareas');
+
+const parciales = [
+  { id: 'parcial-1', label: 'Primer Parcial' },
+  { id: 'parcial-2', label: 'Segundo Parcial' },
+  { id: 'proyecto-final', label: 'Proyecto Final' },
+];
+---
+
+<html lang="es">
+  <head>
+    <title>Tareas - Portal de la Materia</title>
+  </head>
+  <body class="bg-zinc-50 p-8 max-w-5xl mx-auto">
+    <h1 class="text-3xl font-bold mb-8">Listado de Tareas</h1>
+
+    <div class="space-y-10">
+      {parciales.map((p) => {
+        const tareasDelParcial = allTareas.filter(t => t.data.parcial === p.id);
+        
+        return (
+          <section>
+            <h2 class="text-xl font-bold text-zinc-800 border-b pb-2 mb-4">{p.label}</h2>
+            {tareasDelParcial.length === 0 ? (
+              <p class="text-sm text-zinc-400 italic">No hay tareas publicadas aún.</p>
+            ) : (
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {tareasDelParcial.map((t) => (
+                  <a href={`/tareas/${t.slug}`} class="block p-4 bg-white rounded-lg border border-zinc-200 hover:shadow-md transition">
+                    <h3 class="font-semibold text-lg">{t.data.title}</h3>
+                    <p class="text-sm text-zinc-600 line-clamp-2 mt-1">{t.data.description}</p>
+                  </a>
+                ))}
+              </div>
+            )}
+          </section>
+        );
+      })}
+    </div>
+  </body>
+</html>

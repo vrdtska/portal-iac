@@ -1,0 +1,33 @@
+---
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const tareas = await getCollection('tareas');
+  return tareas.map((entry) => ({
+    params: { slug: entry.id }, // Usa entry.id
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry); // Usa render(entry)
+---
+
+<html lang="es">
+  <head>
+    <title>{entry.data.title}</title>
+  </head>
+  <body class="bg-zinc-50 text-zinc-900 max-w-4xl mx-auto p-6">
+    <div class="mb-6 pb-4 border-b border-zinc-200">
+      <span class="text-xs uppercase tracking-wide font-bold px-2 py-1 bg-zinc-200 rounded">
+        {entry.data.parcial.replace('-', ' ')}
+      </span>
+      <h1 class="text-3xl font-bold mt-2">{entry.data.title}</h1>
+      <p class="text-zinc-600">{entry.data.description}</p>
+    </div>
+
+    <article class="prose prose-zinc max-w-none">
+      <Content />
+    </article>
+  </body>
+</html>
