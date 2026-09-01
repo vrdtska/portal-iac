@@ -7,7 +7,7 @@ import mdx from '@astrojs/mdx';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://ubiquitous.udem.edu', 
-  base: '/iac-612956',
+  base: '/~iac-612956',
 
   vite: {
     plugins: [tailwindcss()]
