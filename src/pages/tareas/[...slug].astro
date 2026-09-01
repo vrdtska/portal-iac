@@ -1,33 +1,83 @@
 ---
 import { getCollection, render } from 'astro:content';
+import '../../styles/global.css';
 
 export async function getStaticPaths() {
-  const tareas = await getCollection('tareas');
-  return tareas.map((entry) => ({
-    params: { slug: entry.id }, // Usa entry.id
-    props: { entry },
+  const entradas = await getCollection('tareas'); 
+
+  return entradas.map(entrada => ({
+    params: { slug: entrada.id },
+    props: { entrada },
   }));
 }
 
-const { entry } = Astro.props;
-const { Content } = await render(entry); // Usa render(entry)
+const { entrada } = Astro.props;
+const { Content } = await render(entrada);
+
+const tipoDeEntrada = "Tarea"; 
 ---
 
 <html lang="es">
   <head>
-    <title>{entry.data.title}</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{entrada.data.title}</title>
   </head>
-  <body class="bg-zinc-50 text-zinc-900 max-w-4xl mx-auto p-6">
-    <div class="mb-6 pb-4 border-b border-zinc-200">
-      <span class="text-xs uppercase tracking-wide font-bold px-2 py-1 bg-zinc-200 rounded">
-        {entry.data.parcial.replace('-', ' ')}
-      </span>
-      <h1 class="text-3xl font-bold mt-2">{entry.data.title}</h1>
-      <p class="text-zinc-600">{entry.data.description}</p>
+  <body class="bg-slate-900 text-slate-100 min-h-screen p-6 md:p-12 font-sans selection:bg-blue-500/30">
+    
+    <div class="max-w-3xl mx-auto">
+      <!-- Navegación superior -->
+      <nav class="mb-8">
+        <a href="/" class="group flex items-center text-blue-400 hover:text-blue-300 font-medium transition-colors w-fit">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Volver al Portal
+        </a>
+      </nav>
+
+      <!-- Cabecera del documento -->
+      <header class="mb-10 border-b border-slate-700 pb-6">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="px-3 py-1 bg-slate-800 text-slate-300 rounded-full text-xs font-semibold tracking-wide border border-slate-700">
+            {tipoDeEntrada}
+          </span>
+          <span class="px-3 py-1 bg-blue-900/30 text-blue-400 rounded-full text-xs font-semibold tracking-wide border border-blue-800/50 uppercase">
+            {entrada.data.parcial}
+          </span>
+        </div>
+        
+        <h1 class="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+          {entrada.data.title}
+        </h1>
+        
+        {entrada.data.description && (
+          <p class="text-xl text-slate-400 leading-relaxed">
+            {entrada.data.description}
+          </p>
+        )}
+      </header>
+
+      <!-- Contenido renderizado de Markdown con Tailwind Typography -->
+      <main class="bg-slate-800/20 rounded-2xl border border-slate-700/50 p-6 md:p-10 shadow-xl">
+        <article class="prose prose-invert prose-slate max-w-none
+          prose-headings:text-slate-100 prose-headings:font-bold
+          prose-h2:border-b prose-h2:border-slate-700/50 prose-h2:pb-2
+          prose-a:text-blue-400 hover:prose-a:text-blue-300 prose-a:no-underline hover:prose-a:underline
+          prose-strong:text-white prose-strong:font-semibold
+          prose-code:text-emerald-300 prose-code:bg-slate-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:before:content-none prose-code:after:content-none
+          prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-700
+          prose-img:rounded-xl prose-img:border prose-img:border-slate-700 prose-img:shadow-lg
+          prose-ul:list-disc prose-ol:list-decimal">
+          <Content />
+        </article>
+      </main>
+      
+      <!-- Pie de página del documento -->
+      <footer class="mt-12 text-center text-sm text-slate-500">
+        Actualizado por última vez el {new Date(entrada.data.pubDate).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}
+      </footer>
     </div>
 
-    <article class="prose prose-zinc max-w-none">
-      <Content />
-    </article>
   </body>
 </html>

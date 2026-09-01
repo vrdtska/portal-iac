@@ -1,0 +1,90 @@
+---
+import { getCollection } from 'astro:content';
+import '../../styles/global.css';
+
+// Obtener todas las tareas y ordenarlas por fecha (de más nueva a más vieja)
+const todasLasTareas = await getCollection('guiados');
+const tareasOrdenadas = todasLasTareas.sort((a, b) => new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf());
+
+// Filtrar por parcial
+const tareasParcial1 = tareasOrdenadas.filter(t => t.data.parcial === 'parcial-1');
+const tareasParcial2 = tareasOrdenadas.filter(t => t.data.parcial === 'parcial-2');
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ejercicios Guiados | Portal</title>
+  </head>
+  <body class="bg-slate-950 text-slate-200 min-h-screen font-sans">
+    
+    <div class="max-w-4xl mx-auto p-6 md:p-12">
+      <nav class="mb-8">
+        <a href="/" class="text-blue-400 hover:text-blue-300 font-medium flex items-center gap-2 w-fit transition-colors">
+          <span>←</span> Volver al Inicio
+        </a>
+      </nav>
+
+      <header class="mb-12">
+        <h1 class="text-4xl font-bold text-white mb-4">Índice de Ejercicios Guiados</h1>
+        <p class="text-slate-400 text-lg">Listado completo de entregables asignados durante el curso.</p>
+      </header>
+
+      <!-- SECCIÓN PARCIAL 1 -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-bold text-slate-300 border-b border-slate-800 pb-3 mb-6 flex items-center gap-3">
+          <span class="bg-slate-800 text-slate-300 px-3 py-1 rounded-md text-sm">Parcial 1</span>
+        </h2>
+        
+        {tareasParcial1.length === 0 ? (
+          <p class="text-slate-500 italic">Aún no hay ejercicios guiados registrados en este parcial.</p>
+        ) : (
+          <div class="grid gap-4">
+            {tareasParcial1.map(tarea => (
+              <a href={`/guiados/${tarea.id}`} class="block bg-slate-900 border border-slate-800 hover:border-blue-500/50 p-5 rounded-xl transition-colors group">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-lg font-semibold text-slate-200 group-hover:text-blue-400 mb-1">{tarea.data.title}</h3>
+                    <p class="text-sm text-slate-400">{tarea.data.description}</p>
+                  </div>
+                  <span class="text-xs text-slate-500 whitespace-nowrap ml-4">
+                    {new Date(tarea.data.pubDate).toLocaleDateString('es-MX', { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <!-- SECCIÓN PARCIAL 2 -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-bold text-slate-300 border-b border-slate-800 pb-3 mb-6 flex items-center gap-3">
+          <span class="bg-slate-800 text-slate-300 px-3 py-1 rounded-md text-sm">Parcial 2</span>
+        </h2>
+        
+        {tareasParcial2.length === 0 ? (
+          <p class="text-slate-500 italic">Aún no hay ejercicios guiados registrados en este parcial.</p>
+        ) : (
+          <div class="grid gap-4">
+            {tareasParcial2.map(tarea => (
+              <a href={`/tareas/${tarea.id}`} class="block bg-slate-900 border border-slate-800 hover:border-blue-500/50 p-5 rounded-xl transition-colors group">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-lg font-semibold text-slate-200 group-hover:text-blue-400 mb-1">{tarea.data.title}</h3>
+                    <p class="text-sm text-slate-400">{tarea.data.description}</p>
+                  </div>
+                  <span class="text-xs text-slate-500 whitespace-nowrap ml-4">
+                    {new Date(tarea.data.pubDate).toLocaleDateString('es-MX', { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </section>
+
+    </div>
+  </body>
+</html>

@@ -1,116 +1,73 @@
 ---
 import { getCollection } from 'astro:content';
+import '../styles/global.css';
 
-// 1. Obtener todas las tareas y ejercicios guiados
-const tareas = await getCollection('tareas');
-const guiados = await getCollection('guiados');
-
-// 2. Ordenar por fecha más reciente
-const ultimasTareas = tareas
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 4);
-
-const ultimosGuiados = guiados
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 4);
-
-const parciales = [
-  { id: 'parcial-1', label: 'Parcial 1', desc: 'Fundamentos y estructuras iniciales' },
-  { id: 'parcial-2', label: 'Parcial 2', desc: 'Algoritmos avanzados y grafos' },
-  { id: 'proyecto-final', label: 'Proyecto Final', desc: 'Integración y entrega final' },
-];
+// Obtenemos las colecciones para poder mostrar contadores si lo deseas
+const todasLasTareas = await getCollection('tareas');
+const todosLosGuiados = await getCollection('guiados');
 ---
 
 <html lang="es">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Portal de la Materia</title>
+    <title>Portal | Integración de Tecnologías</title>
   </head>
-  <body class="bg-zinc-50 text-zinc-900 min-h-screen">
-    <!-- Navbar simple -->
-    <header class="border-b border-zinc-200 bg-white sticky top-0 z-10">
-      <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <span class="font-bold text-lg tracking-tight">Portal Materia</span>
-        <nav class="flex gap-6 text-sm font-medium">
-          <a href="/tareas" class="text-zinc-600 hover:text-zinc-900 transition">Tareas</a>
-          <a href="/guiados" class="text-zinc-600 hover:text-zinc-900 transition">Ejercicios Guiados</a>
-          <a href="/admin" target="_blank" class="px-3 py-1 bg-zinc-900 text-white rounded-md text-xs hover:bg-zinc-700 transition">Panel Admin</a>
-        </nav>
-      </div>
-    </header>
-
-    <main class="max-w-6xl mx-auto px-6 py-10 space-y-12">
-      <!-- Hero Banner -->
-      <section class="bg-white border border-zinc-200 rounded-2xl p-8">
-        <h1 class="text-3xl font-extrabold tracking-tight">Ejercicios Guiados y Tareas</h1>
-        <p class="text-zinc-600 mt-2 max-w-2xl">
-          Repositorio central de actividades prácticas, código fuente base y especificaciones de entrega por parcial.
-        </p>
-      </section>
-
-      <!-- Bloques por Parcial -->
-      <section>
-        <h2 class="text-xl font-bold mb-4">Explorar por Etapa</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {parciales.map((p) => {
-            const numTareas = tareas.filter(t => t.data.parcial === p.id).length;
-            const numGuiados = guiados.filter(g => g.data.parcial === p.id).length;
-
-            return (
-              <div class="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm flex flex-col justify-between">
-                <div>
-                  <h3 class="font-bold text-lg">{p.label}</h3>
-                  <p class="text-sm text-zinc-500 mt-1">{p.desc}</p>
-                </div>
-                <div class="mt-6 pt-4 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-600">
-                  <span>{numTareas} tareas</span>
-                  <span>{numGuiados} guiados</span>
-                </div>
-              </div>
-            );
-          })}
+  <body class="bg-slate-950 text-slate-200 min-h-screen font-sans selection:bg-emerald-500/30">
+    
+    <div class="max-w-5xl mx-auto p-6 md:p-12">
+      <!-- Encabezado / Perfil Estudiantil -->
+      <header class="bg-slate-900 border border-slate-800 rounded-2xl p-8 mb-10 shadow-lg shadow-black/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2">
+            Portafolio: Integración de Tecnologías Computacionales
+          </h1>
+          <div class="flex flex-col gap-1 text-slate-400">
+            <p class="text-lg">
+              <span class="text-slate-300 font-medium">Santiago López Cervantes</span>
+            </p>
+            <p class="text-sm">Ingeniería en Tecnologías Computacionales</p>
+          </div>
         </div>
-      </section>
+        <div class="flex gap-4">
+          <a href="https://github.com/vrdtska" target="_blank" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-sm font-semibold transition-all border border-slate-700 hover:border-slate-600 flex items-center gap-2">
+            GitHub
+          </a>
+          <a href="https://linkedin.com/in/santiago-lopez-70b610267" target="_blank" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-semibold transition-all shadow-md shadow-blue-900/20">
+            LinkedIn
+          </a>
+        </div>
+      </header>
 
-      <!-- Actividades Recientes en 2 Columnas -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <!-- Columna: Tareas Recientes -->
-        <section class="bg-white border border-zinc-200 rounded-xl p-6">
-          <div class="flex items-center justify-between mb-4 border-b border-zinc-100 pb-3">
-            <h2 class="font-bold text-lg">Últimas Tareas</h2>
-            <a href="/tareas" class="text-xs text-blue-600 font-semibold hover:underline">Ver todas →</a>
+      <!-- Navegación Principal: Categorías -->
+      <div class="grid md:grid-cols-2 gap-6 mb-12">
+        <!-- Tarjeta de Ejercicios Guiados -->
+        <a href="/guiados" class="group block bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-8 transition-all hover:shadow-lg hover:shadow-emerald-900/20">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold text-slate-100 group-hover:text-emerald-400 transition-colors">Ejercicios Guiados</h2>
+            <span class="bg-slate-800 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold border border-slate-700">{todosLosGuiados.length} entradas</span>
           </div>
-          <ul class="space-y-3">
-            {ultimasTareas.map((t) => (
-              <li>
-                <a href={`/tareas/${t.slug}`} class="block p-3 rounded-lg hover:bg-zinc-50 border border-transparent hover:border-zinc-200 transition">
-                  <div class="text-xs font-semibold text-zinc-400 uppercase">{t.data.parcial.replace('-', ' ')}</div>
-                  <div class="font-medium text-sm text-zinc-800">{t.data.title}</div>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
+          <p class="text-slate-400">Prácticas realizadas en clase y ejercicios paso a paso del semestre.</p>
+        </a>
 
-        <!-- Columna: Guiados Recientes -->
-        <section class="bg-white border border-zinc-200 rounded-xl p-6">
-          <div class="flex items-center justify-between mb-4 border-b border-zinc-100 pb-3">
-            <h2 class="font-bold text-lg">Ejercicios Guiados Recientes</h2>
-            <a href="/guiados" class="text-xs text-blue-600 font-semibold hover:underline">Ver todos →</a>
+        <!-- Tarjeta de Tareas -->
+        <a href="/tareas" class="group block bg-slate-900 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-8 transition-all hover:shadow-lg hover:shadow-blue-900/20">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold text-slate-100 group-hover:text-blue-400 transition-colors">Tareas</h2>
+            <span class="bg-slate-800 text-blue-400 px-3 py-1 rounded-full text-xs font-bold border border-slate-700">{todasLasTareas.length} entradas</span>
           </div>
-          <ul class="space-y-3">
-            {ultimosGuiados.map((g) => (
-              <li>
-                <a href={`/guiados/${g.slug}`} class="block p-3 rounded-lg hover:bg-zinc-50 border border-transparent hover:border-zinc-200 transition">
-                  <div class="text-xs font-semibold text-zinc-400 uppercase">{g.data.parcial.replace('-', ' ')}</div>
-                  <div class="font-medium text-sm text-zinc-800">{g.data.title}</div>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
+          <p class="text-slate-400">Asignaciones, investigaciones y entregables desarrollados fuera del aula.</p>
+        </a>
       </div>
-    </main>
+
+      <!-- Sección de Proyecto Final -->
+      <section class="bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-500/30 rounded-2xl p-8">
+        <h2 class="text-2xl font-bold text-indigo-300 mb-3">Proyecto Final</h2>
+        <p class="text-indigo-200/70 mb-6">Detalles, documentación y despliegue del proyecto integrador del curso.</p>
+        <button class="px-6 py-2.5 bg-indigo-600/20 text-indigo-300 border border-indigo-500/50 rounded-xl text-sm font-semibold cursor-not-allowed opacity-80">
+          Próximamente
+        </button>
+      </section>
+    </div>
   </body>
 </html>
