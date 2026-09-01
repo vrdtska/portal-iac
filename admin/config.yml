@@ -1,0 +1,24 @@
+collections:
+  - name: "tareas"
+    label: "Tareas"
+    folder: "src/content/tareas"
+    path: "{{parcial}}/{{slug}}"
+    create: true
+    fields:
+      - { label: "Título", name: "title", widget: "string" }
+      - { label: "Parcial", name: "parcial", widget: "select", options: ["parcial-1", "parcial-2", "proyecto-final"] }
+      - { label: "Descripción", name: "description", widget: "string" }
+      - { label: "Fecha Entrega", name: "dueDate", widget: "datetime", required: false }
+      - { label: "Repo GitHub", name: "githubRepo", widget: "string", required: false }
+      - { label: "Contenido", name: "body", widget: "markdown" }
+
+  - name: "guiados"
+    label: "Ejercicios Guiados"
+    folder: "src/content/guiados"
+    path: "{{parcial}}/{{slug}}"
+    create: true
+    fields:
+      - { label: "Título", name: "title", widget: "string" }
+      - { label: "Parcial", name: "parcial", widget: "select", options: ["parcial-1", "parcial-2", "proyecto-final"] }
+      - { label: "Descripción", name: "description", widget: "string" }
+      - { label: "Contenido", name: "body", widget: "markdown" }
