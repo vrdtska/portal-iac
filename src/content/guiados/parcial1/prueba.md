@@ -1,7 +1,7 @@
 ---
 title: "Ejercicio Guiado 1: Clasificador de Modelos Cloud"
 description: "Desarrollo de un clasificador de servicios Cloud (IaaS, PaaS, SaaS, FaaS) en Java utilizando reglas, Regex y procesamiento de lenguaje natural (NLP)."
-pubDate: 2026-09-01
+pubDate: 2026-08-17
 parcial: "parcial-1"
 ---
 
