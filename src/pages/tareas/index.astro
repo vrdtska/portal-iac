@@ -57,7 +57,6 @@ const parcial2 = entradasOrdenadas.filter(t => t.data.parcial === 'parcial-2');
             <p class="text-slate-500 italic">Aún no hay entregables registrados en este parcial.</p>
           </div>
         ) : (
-          <!-- Grid dinámico que infiere automáticamente las columnas según el ancho disponible -->
           <div class="grid grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-6">
             {parcial1.map(entrada => (
               <a href={`/~iac-612956/tareas/${entrada.id}/`} class="group relative flex flex-col justify-between p-6 bg-slate-900/80 backdrop-blur-sm border border-slate-800 rounded-2xl hover:bg-slate-800/80 hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/20 overflow-hidden">
@@ -90,7 +89,6 @@ const parcial2 = entradasOrdenadas.filter(t => t.data.parcial === 'parcial-2');
             <p class="text-slate-500 italic">Aún no hay entregables registrados en este parcial.</p>
           </div>
         ) : (
-          <!-- Grid dinámico que infiere automáticamente las columnas según el ancho disponible -->
           <div class="grid grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-6">
             {parcial2.map(entrada => (
               <a href={`/~iac-612956/tareas/${entrada.id}/`} class="group relative flex flex-col justify-between p-6 bg-slate-900/80 backdrop-blur-sm border border-slate-800 rounded-2xl hover:bg-slate-800/80 hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/20 overflow-hidden">
