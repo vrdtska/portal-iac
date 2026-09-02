@@ -1,0 +1,150 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Ejercicio Guiado 1: Clasificador de Modelos Cloud</title><link rel="stylesheet" href="/~iac-612956/_astro/global.De7sL7zB.css"></head><body class="bg-slate-900 text-slate-100 min-h-screen p-6 md:p-12 font-sans selection:bg-blue-500/30"><div class="max-w-3xl mx-auto"><!-- Navegación superior --><nav class="mb-8 overflow-x-auto"><ol class="flex items-center whitespace-nowrap min-w-0 gap-2 text-sm font-medium text-slate-400"><!-- Nivel 1: Portal de Inicio --><li><a href="/~iac-612956/" class="flex items-center gap-1.5 hover:text-slate-200 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>Portal</a></li><!-- Separador --><li class="text-slate-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></li><li><a href="/~iac-612956/tareas/" class="hover:text-emerald-400 transition-colors">Ejercicios Guiados</a></li><!-- Separador --><li class="text-slate-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></li><li class="text-slate-500 truncate max-w-[150px] sm:max-w-xs" title="Ejercicio Guiado 1: Clasificador de Modelos Cloud">Ejercicio Guiado 1: Clasificador de Modelos Cloud</li></ol></nav><!-- Cabecera del documento --><header class="mb-10 border-b border-slate-700 pb-6"><div class="flex items-center gap-3 mb-4"><span class="px-3 py-1 bg-slate-800 text-slate-300 rounded-full text-xs font-semibold tracking-wide border border-slate-700">Tarea</span><span class="px-3 py-1 bg-blue-900/30 text-blue-400 rounded-full text-xs font-semibold tracking-wide border border-blue-800/50 uppercase">parcial-1</span></div><h1 class="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">Ejercicio Guiado 1: Clasificador de Modelos Cloud</h1><p class="text-xl text-slate-400 leading-relaxed">Desarrollo de un clasificador de servicios Cloud (IaaS, PaaS, SaaS, FaaS) en Java utilizando reglas, Regex y procesamiento de lenguaje natural (NLP).</p></header><!-- Contenido renderizado de Markdown con Tailwind Typography --><main class="bg-slate-800/20 rounded-2xl border border-slate-700/50 p-6 md:p-10 shadow-xl"><article class="prose prose-invert prose-slate max-w-none
+          prose-headings:text-slate-100 prose-headings:font-bold
+          prose-h2:border-b prose-h2:border-slate-700/50 prose-h2:pb-2
+          prose-a:text-blue-400 hover:prose-a:text-blue-300 prose-a:no-underline hover:prose-a:underline
+          prose-strong:text-white prose-strong:font-semibold
+          prose-code:text-emerald-300 prose-code:bg-slate-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:before:content-none prose-code:after:content-none
+          prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-700
+          prose-img:rounded-xl prose-img:border prose-img:border-slate-700 prose-img:shadow-lg
+          prose-ul:list-disc prose-ol:list-decimal"><h1 id="ejercicio-guiado-clasificador-de-modelos-de-inteligencia-artificial">Ejercicio Guiado: Clasificador de Modelos de Inteligencia Artificial</h1>
+<p><strong>Materia:</strong> Integración de Aplicaciones Computacionales
+<strong>Estudiante:</strong> Santiago López Cervantes
+<strong>Catedrático:</strong> Dr. Raúl Morales Salcedo</p>
+<h2 id="objetivo">Objetivo</h2>
+<p>Desarrollar una aplicación capaz de analizar descripciones relacionadas con servicios de Cloud Computing y clasificarlas automáticamente como IaaS, PaaS, SaaS o FaaS. El desarrollo evoluciona desde un clasificador basado en reglas (Regex) hacia una solución básica de Procesamiento de Lenguaje Natural (NLP).</p>
+<hr>
+<h2 id="parte-1-desarrollo-inicial-en-java">Parte 1: Desarrollo inicial en Java</h2>
+<p>Se creó el proyecto denominado <code>cloud_models_classifier</code> en un entorno compatible con Java. La primera versión consistió en una aplicación de escritorio con interfaz gráfica (GUI) generada con apoyo de Inteligencia Artificial mediante el prompt establecido en las instrucciones.</p>
+<ul>
+<li>El programa solicita el nombre y apellido del usuario.</li>
+<li>Provee un campo de texto para escribir palabras o descripciones sobre servicios Cloud.</li>
+<li>Utiliza reglas sencillas y expresiones regulares para determinar la categoría correspondiente.</li>
+<li>Los resultados se muestran claramente en la interfaz.</li>
+</ul>
+<details>
+<summary>Haz clic para expandir el código inicial generado por IA (MainGUI.java)</summary>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="java"><code><span class="line"><span style="color:#6A737D">// Reemplaza este bloque con tu código fuente inicial.</span></span>
+<span class="line"><span style="color:#6A737D">// Recuerda que el código debió organizarse utilizando funciones independientes para cada categoría.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">public</span><span style="color:#F97583"> class</span><span style="color:#B392F0"> MainGUI</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    public</span><span style="color:#F97583"> static</span><span style="color:#F97583"> void</span><span style="color:#B392F0"> main</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">String</span><span style="color:#E1E4E8">[] </span><span style="color:#FFAB70">args</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#E1E4E8">        System.out.</span><span style="color:#B392F0">println</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Prototipo inicial cargado."</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+</details>
+<hr>
+<h2 id="parte-2-ejecutar-y-analizar-el-prototipo">Parte 2: Ejecutar y analizar el prototipo</h2>
+<p>Se compiló y ejecutó la aplicación para verificar los siguientes puntos:</p>
+<ul>
+<li>Visualización correcta de la GUI.</li>
+<li>Introducción exitosa de nombre y apellido.</li>
+<li>Capacidad de análisis del texto introducido por el usuario.</li>
+<li>Distinción precisa entre IaaS, PaaS, SaaS y FaaS.</li>
+</ul>
+<h3 id="evidencia-de-funcionamiento">Evidencia de funcionamiento</h3>
+<p><img src="/images/placeholder-gui-inicial.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando una clasificación"></p>
+<hr>
+<h2 id="parte-3-mejorar-la-arquitectura-de-la-aplicación">Parte 3: Mejorar la arquitectura de la aplicación</h2>
+<p>El código inicial fue analizado y refactorizado para mejorar su estructura. Se incorporaron las siguientes mejoras:</p>
+<ul>
+<li>Validación de entradas del usuario.</li>
+<li>Separación estricta entre la Interfaz Gráfica (GUI) y la lógica de clasificación.</li>
+<li>Implementación de métodos independientes para identificar IaaS, PaaS, SaaS y FaaS.</li>
+<li>Manejo básico de errores y excepciones.</li>
+<li>Adición de comentarios explicativos sobre las decisiones relevantes.</li>
+</ul>
+<details>
+<summary>Haz clic para expandir el código refactorizado (Lógica separada de la GUI)</summary>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="java"><code><span class="line"><span style="color:#6A737D">// Reemplaza este bloque con el código de tu clasificador refactorizado.</span></span>
+<span class="line"><span style="color:#6A737D">// Asegúrate de demostrar la separación de responsabilidades exigida.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">public</span><span style="color:#F97583"> class</span><span style="color:#B392F0"> CloudClassifierLogic</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    public</span><span style="color:#E1E4E8"> String </span><span style="color:#B392F0">classifyService</span><span style="color:#E1E4E8">(String </span><span style="color:#FFAB70">input</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#6A737D">        // Lógica de validación y clasificación...</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#9ECBFF"> "IaaS"</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+</details>
+<hr>
+<h2 id="parte-4-evaluar-el-clasificador">Parte 4: Evaluar el clasificador</h2>
+<p>Se realizaron pruebas con distintas descripciones complejas, evitando usar explícitamente los términos IaaS, PaaS, SaaS o FaaS dentro del texto ingresado.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left">Entrada</th>
+<th style="text-align: left">Clasificación esperada</th>
+<th style="text-align: left">Clasificación obtenida</th>
+<th style="text-align: left">¿Fue correcta?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left">“Necesito máquinas virtuales, almacenamiento y redes configurables para instalar mi propio sistema operativo.”</td>
+<td style="text-align: left">IaaS</td>
+<td style="text-align: left"><em>[Tu resultado]</em></td>
+<td style="text-align: left"><em>[Sí/No]</em></td>
+</tr>
+<tr>
+<td style="text-align: left">“Quiero desplegar mi aplicación web sin administrar directamente servidores ni sistemas operativos.”</td>
+<td style="text-align: left">PaaS</td>
+<td style="text-align: left"><em>[Tu resultado]</em></td>
+<td style="text-align: left"><em>[Sí/No]</em></td>
+</tr>
+<tr>
+<td style="text-align: left">“Los empleados utilizan una aplicación de correo electrónico directamente desde el navegador y pagan una suscripción mensual.”</td>
+<td style="text-align: left">SaaS</td>
+<td style="text-align: left"><em>[Tu resultado]</em></td>
+<td style="text-align: left"><em>[Sí/No]</em></td>
+</tr>
+<tr>
+<td style="text-align: left">“Necesito ejecutar una función automáticamente cada vez que un usuario suba una imagen al almacenamiento Cloud.”</td>
+<td style="text-align: left">FaaS</td>
+<td style="text-align: left"><em>[Tu resultado]</em></td>
+<td style="text-align: left"><em>[Sí/No]</em></td>
+</tr>
+<tr>
+<td style="text-align: left"><em>[Agrega tu propia prueba número 5 aquí]</em></td>
+<td style="text-align: left"><em>[Esperado]</em></td>
+<td style="text-align: left"><em>[Tu resultado]</em></td>
+<td style="text-align: left"><em>[Sí/No]</em></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="parte-5-evolucionar-de-regex-hacia-nlp">Parte 5: Evolucionar de Regex hacia NLP</h2>
+<p>Para mejorar la precisión del clasificador, se sustituyeron las reglas estrictas por técnicas básicas de <em>Natural Language Processing</em> (NLP). El flujo implementado incluye:</p>
+<ul>
+<li>Conversión a minúsculas y limpieza de texto.</li>
+<li>Tokenización y eliminación de <em>stopwords</em>.</li>
+<li>Normalización, <em>stemming</em> o lematización.</li>
+<li>Asignación de puntuaciones (<em>scores</em>) ponderadas a cada categoría según los conceptos relevantes identificados.</li>
+</ul>
+<details>
+<summary>Haz clic para expandir el código de NLP implementado</summary>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="java"><code><span class="line"><span style="color:#6A737D">// Reemplaza este bloque con tu implementación de procesamiento de lenguaje natural.</span></span>
+<span class="line"><span style="color:#6A737D">// Muestra cómo aplicaste tokenización, limpieza y asignación de scores.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">public</span><span style="color:#F97583"> class</span><span style="color:#B392F0"> NLPProcessor</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    public</span><span style="color:#F97583"> void</span><span style="color:#B392F0"> processText</span><span style="color:#E1E4E8">(String </span><span style="color:#FFAB70">rawText</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#6A737D">        // Implementación de tokenización y limpieza...</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+</details>
+<hr>
+<h2 id="parte-6-interfaz-de-línea-de-comandos-en-java-cli">Parte 6: Interfaz de línea de comandos en Java (CLI)</h2>
+<p>Finalmente, se desarrolló una interfaz de línea de comandos (CLI) que reutiliza exactamente la misma lógica de clasificación central (NLP + Scoring) utilizada por la GUI.</p>
+<h3 id="evidencia-de-ejecución-cli">Evidencia de ejecución CLI</h3>
+<p>Ejemplo de comando ejecutado:
+<code>java CloudClassifier "máquinas virtuales almacenamiento redes"</code></p>
+<p><img src="/images/placeholder-cli-execution.png" alt="Captura de pantalla de la terminal ejecutando el clasificador CLI"></p>
+<details>
+<summary>Haz clic para expandir el código de la interfaz CLI</summary>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="java"><code><span class="line"><span style="color:#6A737D">// Reemplaza este bloque con el archivo principal que maneja los argumentos de la línea de comandos.</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">public</span><span style="color:#F97583"> class</span><span style="color:#B392F0"> CLIMain</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    public</span><span style="color:#F97583"> static</span><span style="color:#F97583"> void</span><span style="color:#B392F0"> main</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">String</span><span style="color:#E1E4E8">[] </span><span style="color:#FFAB70">args</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#6A737D">        // Procesamiento de args y llamado a CloudClassifierLogic...</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+</details>
+</article></main><!-- Pie de página del documento --><footer class="mt-12 text-center text-sm text-slate-500">Actualizado por última vez el 17 de agosto de 2026</footer></div></body></html>
