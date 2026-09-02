@@ -8,7 +8,7 @@ import mdx from '@astrojs/mdx';
 export default defineConfig({
   site: 'https://ubiquitous.udem.edu', 
   base: '/~iac-612956',
-
+  trailingSlash: 'always',
   vite: {
     plugins: [tailwindcss()]
   },
