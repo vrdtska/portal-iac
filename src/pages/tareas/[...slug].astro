@@ -3,7 +3,7 @@ import { getCollection, render } from 'astro:content';
 import '../../styles/global.css';
 
 export async function getStaticPaths() {
-  const entradas = await getCollection('tareas'); 
+  const entradas = await getCollection('guiados'); 
 
   return entradas.map(entrada => ({
     params: { slug: entrada.id },
@@ -46,9 +46,8 @@ const tipoDeEntrada = "Tarea";
             </svg>
           </li>
 
-          <!-- Nivel 2: Índice de Ejercicios -->
           <li>
-            <a href="/~iac-612956/guiados/" class="hover:text-emerald-400 transition-colors">
+            <a href="/~iac-612956/tareas/" class="hover:text-emerald-400 transition-colors">
               Ejercicios Guiados
             </a>
           </li>
@@ -60,7 +59,6 @@ const tipoDeEntrada = "Tarea";
             </svg>
           </li>
 
-          <!-- Nivel 3: Documento Actual (truncado si es muy largo) -->
           <li class="text-slate-500 truncate max-w-[150px] sm:max-w-xs" title={entrada.data.title}>
             {entrada.data.title}
           </li>
