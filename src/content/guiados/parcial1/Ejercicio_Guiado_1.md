@@ -7,7 +7,9 @@ parcial: "parcial-1"
 
 # Ejercicio Guiado: Clasificador de Modelos de Inteligencia Artificial
 **Materia:** Integración de Aplicaciones Computacionales
+
 **Estudiante:** Santiago López Cervantes 
+
 **Catedrático:** Dr. Raúl Morales Salcedo
 
 ## Objetivo
