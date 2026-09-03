@@ -22,199 +22,34 @@
 <li>Utiliza reglas sencillas y expresiones regulares para determinar la categoría correspondiente.</li>
 <li>Los resultados se muestran claramente en la interfaz.</li>
 </ul>
-<details>
-<summary>Haga clic para expandir el código inicial generado por IA (CloudClassifierApp.java)</summary>
-<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="java"><code><span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> javax.swing.</span><span style="color:#79B8FF">*</span><span style="color:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> javax.swing.border.EmptyBorder;</span></span>
-<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> java.awt.</span><span style="color:#79B8FF">*</span><span style="color:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> java.awt.event.ActionEvent;</span></span>
-<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> java.awt.event.ActionListener;</span></span>
-<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> java.util.regex.Matcher;</span></span>
-<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> java.util.regex.Pattern;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#F97583">public</span><span style="color:#F97583"> class</span><span style="color:#B392F0"> CloudClassifierApp</span><span style="color:#F97583"> extends</span><span style="color:#B392F0"> JFrame</span><span style="color:#E1E4E8"> {</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D">    // Componentes visuales</span></span>
-<span class="line"><span style="color:#F97583">    private</span><span style="color:#E1E4E8"> JTextField txtNombre;</span></span>
-<span class="line"><span style="color:#F97583">    private</span><span style="color:#E1E4E8"> JTextField txtApellido;</span></span>
-<span class="line"><span style="color:#F97583">    private</span><span style="color:#E1E4E8"> JTextArea txtDescripcion;</span></span>
-<span class="line"><span style="color:#F97583">    private</span><span style="color:#E1E4E8"> JLabel lblResultado;</span></span>
-<span class="line"><span style="color:#F97583">    private</span><span style="color:#E1E4E8"> JLabel lblDetalles;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#F97583">    public</span><span style="color:#B392F0"> CloudClassifierApp</span><span style="color:#E1E4E8">() {</span></span>
-<span class="line"><span style="color:#6A737D">        // Configuración básica de la ventana</span></span>
-<span class="line"><span style="color:#B392F0">        setTitle</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Clasificador de Servicios Cloud (IaaS, PaaS, SaaS, FaaS)"</span><span style="color:#E1E4E8">);</span></span>
-<span class="line"><span style="color:#B392F0">        setSize</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">650</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">600</span><span style="color:#E1E4E8">);</span></span>
-<span class="line"><span style="color:#B392F0">        setDefaultCloseOperation</span><span style="color:#E1E4E8">(JFrame.EXIT_ON_CLOSE);</span></span>
-<span class="line"><span style="color:#B392F0">        setLocationRelativeTo</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">null</span><span style="color:#E1E4E8">);</span></span>
-<span class="line"><span style="color:#B392F0">        setLayout</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#B392F0"> BorderLayout</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D">        // Panel principal con margen interno</span></span>
-<span class="line"><span style="color:#E1E4E8">        JPanel mainPanel </span><span style="color:#F97583">=</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> JPanel</span><span style="color:#E1E4E8">();</span></span>
-<span class="line"><span style="color:#E1E4E8">        mainPanel.</span><span style="color:#B392F0">setLayout</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#B392F0"> BoxLayout</span><span style="color:#E1E4E8">(mainPanel, BoxLayout.Y_AXIS));</span></span>
-<span class="line"><span style="color:#E1E4E8">        mainPanel.</span><span style="color:#B392F0">setBorder</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#B392F0"> EmptyBorder</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">15</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">15</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">15</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">15</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D">        // --- SECCIÓN 1: Datos del usuario ---</span></span>
-<span class="line"><span style="color:#E1E4E8">        JPanel pnlUsuario </span><span style="color:#F97583">=</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> JPanel</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#B392F0"> GridLayout</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">2</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">2</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">8</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"><span style="color:#E1E4E8">        pnlUsuario.</span><span style="color:#B392F0">setBorder</span><span style="color:#E1E4E8">(BorderFactory.</span><span style="color:#B392F0">createTitledBorder</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Información del Usuario"</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"><span style="color:#E1E4E8">        pnlUsuario.</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#B392F0"> JLabel</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Nombre:"</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"><span style="color:#E1E4E8">        txtNombre </span><span style="color:#F97583">=</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> JTextField</span><span style="color:#E1E4E8">();</span></span>
-<span class="line"><span style="color:#E1E4E8">        pnlUsuario.</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">(txtNombre);</span></span>
-<span class="line"><span style="color:#E1E4E8">        pnlUsuario.</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#B392F0"> JLabel</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Apellido:"</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"><span style="color:#E1E4E8">        txtApellido </span><span style="color:#F97583">=</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> JTextField</span><span style="color:#E1E4E8">();</span></span>
-<span class="line"><span style="color:#E1E4E8">        pnlUsuario.</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">(txtApellido);</span></span>
-<span class="line"><span style="color:#E1E4E8">        mainPanel.</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">(pnlUsuario);</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#E1E4E8">        mainPanel.</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">(Box.</span><span style="color:#B392F0">createVerticalStrut</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D">        // --- SECCIÓN 2: Entrada del texto a clasificar ---</span></span>
-<span class="line"><span style="color:#E1E4E8">        JPanel pnlTexto </span><span style="color:#F97583">=</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> JPanel</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#B392F0"> BorderLayout</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">5</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">5</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"><span style="color:#E1E4E8">        pnlTexto.</span><span style="color:#B392F0">setBorder</span><span style="color:#E1E4E8">(BorderFactory.</span><span style="color:#B392F0">createTitledBorder</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Descripción o palabras clave del servicio Cloud"</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"><span style="color:#E1E4E8">        txtDescripcion </span><span style="color:#F97583">=</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> JTextArea</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">6</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">40</span><span style="color:#E1E4E8">);</span></span>
-<span class="line"><span style="color:#E1E4E8">        txtDescripcion.</span><span style="color:#B392F0">setLineWrap</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">true</span><span style="color:#E1E4E8">);</span></span>
-<span class="line"><span style="color:#E1E4E8">        txtDescripcion.</span><span style="color:#B392F0">setWrapStyleWord</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">true</span><span style="color:#E1E4E8">);</span></span>
-<span class="line"><span style="color:#E1E4E8">        JScrollPane scroll </span><span style="color:#F97583">=</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> JScrollPane</span><span style="color:#E1E4E8">(txtDescripcion);</span></span>
-<span class="line"><span style="color:#E1E4E8">        pnlTexto.</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">(scroll, BorderLayout.CENTER);</span></span>
-<span class="line"><span style="color:#E1E4E8">        mainPanel.</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">(pnlTexto);</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#E1E4E8">        mainPanel.</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">(Box.</span><span style="color:#B392F0">createVerticalStrut</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D">        // --- SECCIÓN 3: Botón de análisis ---</span></span>
-<span class="line"><span style="color:#E1E4E8">        JButton btnAnalizar </span><span style="color:#F97583">=</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> JButton</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Analizar y Clasificar Modelo"</span><span style="color:#E1E4E8">);</span></span>
-<span class="line"><span style="color:#E1E4E8">        btnAnalizar.</span><span style="color:#B392F0">setAlignmentX</span><span style="color:#E1E4E8">(Component.CENTER_ALIGNMENT);</span></span>
-<span class="line"><span style="color:#E1E4E8">        btnAnalizar.</span><span style="color:#B392F0">setFont</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#B392F0"> Font</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"SansSerif"</span><span style="color:#E1E4E8">, Font.BOLD, </span><span style="color:#79B8FF">13</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"><span style="color:#E1E4E8">        mainPanel.</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">(btnAnalizar);</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#E1E4E8">        mainPanel.</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">(Box.</span><span style="color:#B392F0">createVerticalStrut</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D">        // --- SECCIÓN 4: Visualización del resultado ---</span></span>
-<span class="line"><span style="color:#E1E4E8">        JPanel pnlResultado </span><span style="color:#F97583">=</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> JPanel</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#B392F0"> GridLayout</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">2</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">1</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">5</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">5</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"><span style="color:#E1E4E8">        pnlResultado.</span><span style="color:#B392F0">setBorder</span><span style="color:#E1E4E8">(BorderFactory.</span><span style="color:#B392F0">createTitledBorder</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Resultado del Análisis"</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"><span style="color:#E1E4E8">        </span></span>
-<span class="line"><span style="color:#E1E4E8">        lblResultado </span><span style="color:#F97583">=</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> JLabel</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Ingresa los datos y presiona 'Analizar'"</span><span style="color:#E1E4E8">, SwingConstants.CENTER);</span></span>
-<span class="line"><span style="color:#E1E4E8">        lblResultado.</span><span style="color:#B392F0">setFont</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#B392F0"> Font</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"SansSerif"</span><span style="color:#E1E4E8">, Font.BOLD, </span><span style="color:#79B8FF">15</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"><span style="color:#E1E4E8">        lblResultado.</span><span style="color:#B392F0">setForeground</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#B392F0"> Color</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">30</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">80</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">160</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"><span style="color:#E1E4E8">        </span></span>
-<span class="line"><span style="color:#E1E4E8">        lblDetalles </span><span style="color:#F97583">=</span><span style="color:#F97583"> new</span><span style="color:#B392F0"> JLabel</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">""</span><span style="color:#E1E4E8">, SwingConstants.CENTER);</span></span>
-<span class="line"><span style="color:#E1E4E8">        lblDetalles.</span><span style="color:#B392F0">setFont</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#B392F0"> Font</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"SansSerif"</span><span style="color:#E1E4E8">, Font.PLAIN, </span><span style="color:#79B8FF">12</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#E1E4E8">        pnlResultado.</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">(lblResultado);</span></span>
-<span class="line"><span style="color:#E1E4E8">        pnlResultado.</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">(lblDetalles);</span></span>
-<span class="line"><span style="color:#E1E4E8">        mainPanel.</span><span style="color:#B392F0">add</span><span style="color:#E1E4E8">(pnlResultado);</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#B392F0">        add</span><span style="color:#E1E4E8">(mainPanel, BorderLayout.CENTER);</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D">        // Evento del botón</span></span>
-<span class="line"><span style="color:#E1E4E8">        btnAnalizar.</span><span style="color:#B392F0">addActionListener</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#B392F0"> ActionListener</span><span style="color:#E1E4E8">() {</span></span>
-<span class="line"><span style="color:#E1E4E8">            @</span><span style="color:#F97583">Override</span></span>
-<span class="line"><span style="color:#F97583">            public</span><span style="color:#F97583"> void</span><span style="color:#B392F0"> actionPerformed</span><span style="color:#E1E4E8">(ActionEvent </span><span style="color:#FFAB70">e</span><span style="color:#E1E4E8">) {</span></span>
-<span class="line"><span style="color:#B392F0">                procesarClasificacion</span><span style="color:#E1E4E8">();</span></span>
-<span class="line"><span style="color:#E1E4E8">            }</span></span>
-<span class="line"><span style="color:#E1E4E8">        });</span></span>
-<span class="line"><span style="color:#E1E4E8">    }</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D">    /**</span></span>
-<span class="line"><span style="color:#6A737D">     * Valida entradas, ejecuta las reglas de conteo por modelo y determina el resultado.</span></span>
-<span class="line"><span style="color:#6A737D">     */</span></span>
-<span class="line"><span style="color:#F97583">    private</span><span style="color:#F97583"> void</span><span style="color:#B392F0"> procesarClasificacion</span><span style="color:#E1E4E8">() {</span></span>
-<span class="line"><span style="color:#E1E4E8">        String nombre </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> txtNombre.</span><span style="color:#B392F0">getText</span><span style="color:#E1E4E8">().</span><span style="color:#B392F0">trim</span><span style="color:#E1E4E8">();</span></span>
-<span class="line"><span style="color:#E1E4E8">        String apellido </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> txtApellido.</span><span style="color:#B392F0">getText</span><span style="color:#E1E4E8">().</span><span style="color:#B392F0">trim</span><span style="color:#E1E4E8">();</span></span>
-<span class="line"><span style="color:#E1E4E8">        String texto </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> txtDescripcion.</span><span style="color:#B392F0">getText</span><span style="color:#E1E4E8">().</span><span style="color:#B392F0">trim</span><span style="color:#E1E4E8">();</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> (nombre.</span><span style="color:#B392F0">isEmpty</span><span style="color:#E1E4E8">() </span><span style="color:#F97583">||</span><span style="color:#E1E4E8"> apellido.</span><span style="color:#B392F0">isEmpty</span><span style="color:#E1E4E8">()) {</span></span>
-<span class="line"><span style="color:#E1E4E8">            JOptionPane.</span><span style="color:#B392F0">showMessageDialog</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">this</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"Por favor, ingresa tu nombre y apellido."</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"Datos incompletos"</span><span style="color:#E1E4E8">, JOptionPane.WARNING_MESSAGE);</span></span>
-<span class="line"><span style="color:#F97583">            return</span><span style="color:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#E1E4E8">        }</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> (texto.</span><span style="color:#B392F0">isEmpty</span><span style="color:#E1E4E8">()) {</span></span>
-<span class="line"><span style="color:#E1E4E8">            JOptionPane.</span><span style="color:#B392F0">showMessageDialog</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">this</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"Por favor, escribe una descripción o palabras clave para clasificar."</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"Texto vacío"</span><span style="color:#E1E4E8">, JOptionPane.WARNING_MESSAGE);</span></span>
-<span class="line"><span style="color:#F97583">            return</span><span style="color:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#E1E4E8">        }</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D">        // Evaluar puntuaciones mediante métodos específicos para cada categoría</span></span>
-<span class="line"><span style="color:#F97583">        int</span><span style="color:#E1E4E8"> scoreIaaS </span><span style="color:#F97583">=</span><span style="color:#B392F0"> evaluarIaaS</span><span style="color:#E1E4E8">(texto);</span></span>
-<span class="line"><span style="color:#F97583">        int</span><span style="color:#E1E4E8"> scorePaaS </span><span style="color:#F97583">=</span><span style="color:#B392F0"> evaluarPaaS</span><span style="color:#E1E4E8">(texto);</span></span>
-<span class="line"><span style="color:#F97583">        int</span><span style="color:#E1E4E8"> scoreSaaS </span><span style="color:#F97583">=</span><span style="color:#B392F0"> evaluarSaaS</span><span style="color:#E1E4E8">(texto);</span></span>
-<span class="line"><span style="color:#F97583">        int</span><span style="color:#E1E4E8"> scoreFaaS </span><span style="color:#F97583">=</span><span style="color:#B392F0"> evaluarFaaS</span><span style="color:#E1E4E8">(texto);</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D">        // Determinar el modelo con mayor coincidencia</span></span>
-<span class="line"><span style="color:#F97583">        int</span><span style="color:#E1E4E8"> maxScore </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> Math.</span><span style="color:#B392F0">max</span><span style="color:#E1E4E8">(scoreIaaS, Math.</span><span style="color:#B392F0">max</span><span style="color:#E1E4E8">(scorePaaS, Math.</span><span style="color:#B392F0">max</span><span style="color:#E1E4E8">(scoreSaaS, scoreFaaS)));</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> (maxScore </span><span style="color:#F97583">==</span><span style="color:#79B8FF"> 0</span><span style="color:#E1E4E8">) {</span></span>
-<span class="line"><span style="color:#E1E4E8">            lblResultado.</span><span style="color:#B392F0">setText</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Resultado: Indeterminado / No clasificado"</span><span style="color:#E1E4E8">);</span></span>
-<span class="line"><span style="color:#E1E4E8">            lblResultado.</span><span style="color:#B392F0">setForeground</span><span style="color:#E1E4E8">(Color.DARK_GRAY);</span></span>
-<span class="line"><span style="color:#E1E4E8">            lblDetalles.</span><span style="color:#B392F0">setText</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Usuario: "</span><span style="color:#F97583"> +</span><span style="color:#E1E4E8"> nombre </span><span style="color:#F97583">+</span><span style="color:#9ECBFF"> " "</span><span style="color:#F97583"> +</span><span style="color:#E1E4E8"> apellido </span><span style="color:#F97583">+</span><span style="color:#9ECBFF"> " | No se detectaron suficientes patrones clave."</span><span style="color:#E1E4E8">);</span></span>
-<span class="line"><span style="color:#E1E4E8">        } </span><span style="color:#F97583">else</span><span style="color:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#E1E4E8">            String categoria </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> ""</span><span style="color:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#F97583">            if</span><span style="color:#E1E4E8"> (maxScore </span><span style="color:#F97583">==</span><span style="color:#E1E4E8"> scoreIaaS) categoria </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "IaaS (Infrastructure as a Service)"</span><span style="color:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#F97583">            else</span><span style="color:#F97583"> if</span><span style="color:#E1E4E8"> (maxScore </span><span style="color:#F97583">==</span><span style="color:#E1E4E8"> scorePaaS) categoria </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "PaaS (Platform as a Service)"</span><span style="color:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#F97583">            else</span><span style="color:#F97583"> if</span><span style="color:#E1E4E8"> (maxScore </span><span style="color:#F97583">==</span><span style="color:#E1E4E8"> scoreSaaS) categoria </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "SaaS (Software as a Service)"</span><span style="color:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#F97583">            else</span><span style="color:#F97583"> if</span><span style="color:#E1E4E8"> (maxScore </span><span style="color:#F97583">==</span><span style="color:#E1E4E8"> scoreFaaS) categoria </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "FaaS (Function as a Service / Serverless)"</span><span style="color:#E1E4E8">;</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#E1E4E8">            lblResultado.</span><span style="color:#B392F0">setText</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Modelo Detectado: "</span><span style="color:#F97583"> +</span><span style="color:#E1E4E8"> categoria);</span></span>
-<span class="line"><span style="color:#E1E4E8">            lblResultado.</span><span style="color:#B392F0">setForeground</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">new</span><span style="color:#B392F0"> Color</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">128</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">));</span></span>
-<span class="line"><span style="color:#E1E4E8">            lblDetalles.</span><span style="color:#B392F0">setText</span><span style="color:#E1E4E8">(String.</span><span style="color:#B392F0">format</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Usuario: %s %s | Puntos -&gt; IaaS: %d, PaaS: %d, SaaS: %d, FaaS: %d"</span><span style="color:#E1E4E8">,</span></span>
-<span class="line"><span style="color:#E1E4E8">                    nombre, apellido, scoreIaaS, scorePaaS, scoreSaaS, scoreFaaS));</span></span>
-<span class="line"><span style="color:#E1E4E8">        }</span></span>
-<span class="line"><span style="color:#E1E4E8">    }</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D">    /**</span></span>
-<span class="line"><span style="color:#6A737D">     * Evalúa términos relacionados con Infraestructura como Servicio (IaaS)</span></span>
-<span class="line"><span style="color:#6A737D">     */</span></span>
-<span class="line"><span style="color:#F97583">    private</span><span style="color:#F97583"> int</span><span style="color:#B392F0"> evaluarIaaS</span><span style="color:#E1E4E8">(String </span><span style="color:#FFAB70">texto</span><span style="color:#E1E4E8">) {</span></span>
-<span class="line"><span style="color:#E1E4E8">        String regex </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">b(iaas|m[aá]quina</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+virtual|virtual</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+machine|vm|servidor</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+dedicado|almacenamiento</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+en</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+bloque|ebs|s3|ec2|vpc|red</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+virtual|firewall|compute</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+engine|azure</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+vm|hardware|hipervisor|storage)</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">b"</span><span style="color:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#F97583">        return</span><span style="color:#B392F0"> contarCoincidenciasRegex</span><span style="color:#E1E4E8">(texto, regex);</span></span>
-<span class="line"><span style="color:#E1E4E8">    }</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D">    /**</span></span>
-<span class="line"><span style="color:#6A737D">     * Evalúa términos relacionados con Plataforma como Servicio (PaaS)</span></span>
-<span class="line"><span style="color:#6A737D">     */</span></span>
-<span class="line"><span style="color:#F97583">    private</span><span style="color:#F97583"> int</span><span style="color:#B392F0"> evaluarPaaS</span><span style="color:#E1E4E8">(String </span><span style="color:#FFAB70">texto</span><span style="color:#E1E4E8">) {</span></span>
-<span class="line"><span style="color:#E1E4E8">        String regex </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">b(paas|despliegue</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+de</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+c[oó]digo|entorno</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+de</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+ejecuci[oó]n|heroku|app</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+engine|elastic</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+beanstalk|base</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+de</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+datos</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+administrada|managed</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+db|runtime|middleware|sdk|framework|render|fly</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">.io)</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">b"</span><span style="color:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#F97583">        return</span><span style="color:#B392F0"> contarCoincidenciasRegex</span><span style="color:#E1E4E8">(texto, regex);</span></span>
-<span class="line"><span style="color:#E1E4E8">    }</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D">    /**</span></span>
-<span class="line"><span style="color:#6A737D">     * Evalúa términos relacionados con Software como Servicio (SaaS)</span></span>
-<span class="line"><span style="color:#6A737D">     */</span></span>
-<span class="line"><span style="color:#F97583">    private</span><span style="color:#F97583"> int</span><span style="color:#B392F0"> evaluarSaaS</span><span style="color:#E1E4E8">(String </span><span style="color:#FFAB70">texto</span><span style="color:#E1E4E8">) {</span></span>
-<span class="line"><span style="color:#E1E4E8">        String regex </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">b(saas|aplicaci[oó]n</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+final|usuario</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+final|google</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+workspace|office</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s*365|salesforce|dropbox|gmail|zoom|slack|software</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+listo|correo</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+electr[oó]nico|crm|erp)</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">b"</span><span style="color:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#F97583">        return</span><span style="color:#B392F0"> contarCoincidenciasRegex</span><span style="color:#E1E4E8">(texto, regex);</span></span>
-<span class="line"><span style="color:#E1E4E8">    }</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D">    /**</span></span>
-<span class="line"><span style="color:#6A737D">     * Evalúa términos relacionados con Funciones como Servicio (FaaS / Serverless)</span></span>
-<span class="line"><span style="color:#6A737D">     */</span></span>
-<span class="line"><span style="color:#F97583">    private</span><span style="color:#F97583"> int</span><span style="color:#B392F0"> evaluarFaaS</span><span style="color:#E1E4E8">(String </span><span style="color:#FFAB70">texto</span><span style="color:#E1E4E8">) {</span></span>
-<span class="line"><span style="color:#E1E4E8">        String regex </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">b(faas|serverless|sin</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+servidor|aws</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+lambda|cloud</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+functions|azure</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+functions|ejecuci[oó]n</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+por</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+eventos|event-driven|microfunci[oó]n|pago</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+por</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">s+ejecuci[oó]n|invocaci[oó]n|trigger)</span><span style="color:#79B8FF">\\</span><span style="color:#9ECBFF">b"</span><span style="color:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#F97583">        return</span><span style="color:#B392F0"> contarCoincidenciasRegex</span><span style="color:#E1E4E8">(texto, regex);</span></span>
-<span class="line"><span style="color:#E1E4E8">    }</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#6A737D">    /**</span></span>
-<span class="line"><span style="color:#6A737D">     * Cuenta cuántas veces se repiten los patrones regex dentro del texto (insensible a mayúsculas/minúsculas).</span></span>
-<span class="line"><span style="color:#6A737D">     */</span></span>
-<span class="line"><span style="color:#F97583">    private</span><span style="color:#F97583"> int</span><span style="color:#B392F0"> contarCoincidenciasRegex</span><span style="color:#E1E4E8">(String </span><span style="color:#FFAB70">texto</span><span style="color:#E1E4E8">, String </span><span style="color:#FFAB70">regex</span><span style="color:#E1E4E8">) {</span></span>
-<span class="line"><span style="color:#E1E4E8">        Pattern pattern </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> Pattern.</span><span style="color:#B392F0">compile</span><span style="color:#E1E4E8">(regex, Pattern.CASE_INSENSITIVE </span><span style="color:#F97583">|</span><span style="color:#E1E4E8"> Pattern.UNICODE_CASE);</span></span>
-<span class="line"><span style="color:#E1E4E8">        Matcher matcher </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> pattern.</span><span style="color:#B392F0">matcher</span><span style="color:#E1E4E8">(texto);</span></span>
-<span class="line"><span style="color:#F97583">        int</span><span style="color:#E1E4E8"> coincidencias </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 0</span><span style="color:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#F97583">        while</span><span style="color:#E1E4E8"> (matcher.</span><span style="color:#B392F0">find</span><span style="color:#E1E4E8">()) {</span></span>
-<span class="line"><span style="color:#E1E4E8">            coincidencias</span><span style="color:#F97583">++</span><span style="color:#E1E4E8">;</span></span>
-<span class="line"><span style="color:#E1E4E8">        }</span></span>
-<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> coincidencias;</span></span>
-<span class="line"><span style="color:#E1E4E8">    }</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#F97583">    public</span><span style="color:#F97583"> static</span><span style="color:#F97583"> void</span><span style="color:#B392F0"> main</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">String</span><span style="color:#E1E4E8">[] </span><span style="color:#FFAB70">args</span><span style="color:#E1E4E8">) {</span></span>
-<span class="line"><span style="color:#6A737D">        // Ajuste de Look and Feel del sistema para una apariencia nativa en Linux</span></span>
-<span class="line"><span style="color:#F97583">        try</span><span style="color:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#E1E4E8">            UIManager.</span><span style="color:#B392F0">setLookAndFeel</span><span style="color:#E1E4E8">(UIManager.</span><span style="color:#B392F0">getSystemLookAndFeelClassName</span><span style="color:#E1E4E8">());</span></span>
-<span class="line"><span style="color:#E1E4E8">        } </span><span style="color:#F97583">catch</span><span style="color:#E1E4E8"> (Exception </span><span style="color:#FFAB70">ignored</span><span style="color:#E1E4E8">) {}</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#E1E4E8">        SwingUtilities.</span><span style="color:#B392F0">invokeLater</span><span style="color:#E1E4E8">(() </span><span style="color:#F97583">-&gt;</span><span style="color:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#F97583">            new</span><span style="color:#B392F0"> CloudClassifierApp</span><span style="color:#E1E4E8">().</span><span style="color:#B392F0">setVisible</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">true</span><span style="color:#E1E4E8">);</span></span>
-<span class="line"><span style="color:#E1E4E8">        });</span></span>
-<span class="line"><span style="color:#E1E4E8">    }</span></span>
-<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
-</details>
+<div class="my-8 not-prose flex justify-center">
+  <a 
+    href="https://github.com/vrdtska/cloud-models-classifier" 
+    target="_blank" 
+    rel="noopener noreferrer"
+    class="inline-flex items-center gap-3 px-5 py-3 bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700/80 hover:border-slate-600 rounded-xl font-medium text-sm transition-all duration-200 shadow-lg shadow-black/20 hover:-translate-y-0.5 group w-fit no-underline">
+    <svg class="w-5 h-5 fill-current text-slate-400 group-hover:text-white transition-colors" viewBox="0 0 24 24">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+    </svg>
+    <span>Ver código fuente en GitHub</span>
+    <svg class="w-4 h-4 text-slate-500 group-hover:text-slate-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+    </svg>
+  </a>
+</div>
+<div class="my-8 not-prose flex justify-center">
+  <a 
+    href="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/main.tar.gz" 
+    download
+    class="inline-flex items-center gap-3 px-5 py-3 bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700/80 hover:border-emerald-500/50 rounded-xl font-medium text-sm transition-all duration-200 shadow-lg shadow-black/20 hover:-translate-y-0.5 group w-fit no-underline">
+    <!-- Icono de archivo comprimido / descarga -->
+    <svg class="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>
+    <span>Descargar Código Fuente (.zip)</span>
+    <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">ZIP</span>
+  </a>
+</div>
 <hr>
 <h2 id="parte-2-ejecutar-y-analizar-el-prototipo">Parte 2: Ejecutar y analizar el prototipo</h2>
 <p>Se compiló y ejecutó la aplicación para verificar los siguientes puntos:</p>
@@ -315,6 +150,16 @@
 </tr>
 </tbody>
 </table>
+<p><strong>Prueba para detección FaaS</strong>
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba1/faas.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando prueba FaaS">
+<strong>Prueba para detección IaaS</strong>
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba1/iaas.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando una IaaS">
+<strong>Prueba para detección Paas</strong>
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba1/paas.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando una PaaS">
+<strong>Prueba para detección SaaS</strong>
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba1/saas.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando una SaaS">
+<strong>Prueba para detección de texto ambiguo</strong>
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba1/na.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando un texto ambiguo."></p>
 <hr>
 <h2 id="parte-5-evolucionar-de-regex-hacia-nlp">Parte 5: Evolucionar de Regex hacia NLP</h2>
 <p>Para mejorar la precisión del clasificador, se sustituyeron las reglas estrictas por técnicas básicas de <em>Natural Language Processing</em> (NLP). El flujo implementado incluye:</p>
