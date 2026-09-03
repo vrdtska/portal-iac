@@ -154,5 +154,20 @@ const tipoDeEntrada = "Tarea";
         });
       }
     </script>
+    <!-- Script para zoom en imágenes de Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js"></script>
+    <script>
+      // Declaración de tipos para TypeScript si es necesario
+      declare const mediumZoom: any;
+
+      window.addEventListener('DOMContentLoaded', () => {
+        // Selecciona todas las imágenes renderizadas dentro del artículo de Markdown
+        mediumZoom('article img', {
+          margin: 24,
+          background: '#020617ee', // Fondo oscuro (slate-950) con transparencia al hacer zoom
+          scrollOffset: 0,
+        });
+      });
+    </script>
   </body>
 </html>
