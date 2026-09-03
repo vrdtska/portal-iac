@@ -197,13 +197,13 @@ Se realizaron pruebas con distintas descripciones complejas, evitando usar expl�
 
 
 **Prueba para detecci처n FaaS**
-![Captura de pantalla de la GUI inicial funcionando y mostrando prueba FaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/faas.png)
+![Captura de pantalla de la GUI inicial funcionando y mostrando prueba FaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/FaaS.png)
 **Prueba para detecci처n IaaS**
-![Captura de pantalla de la GUI inicial funcionando y mostrando una IaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/iaas.png)
+![Captura de pantalla de la GUI inicial funcionando y mostrando una IaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/IaaS.png)
 **Prueba para detecci처n Paas**
-![Captura de pantalla de la GUI inicial funcionando y mostrando una PaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/paas.png)
+![Captura de pantalla de la GUI inicial funcionando y mostrando una PaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/PaaS.png)
 **Prueba para detecci처n SaaS**
-![Captura de pantalla de la GUI inicial funcionando y mostrando una SaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/saas.png)
+![Captura de pantalla de la GUI inicial funcionando y mostrando una SaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/SaaS.png)
 **Prueba para detecci처n de texto ambiguo**
 ![Captura de pantalla de la GUI inicial funcionando y mostrando un texto ambiguo.](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/na.png)
 
