@@ -143,8 +143,8 @@
 <td style="text-align: left"><strong>Sí</strong></td>
 </tr>
 <tr>
-<td style="text-align: left">Hola computadora dame una manzana y hazma la tarea.</td>
-<td style="text-align: left">Indeterminado</td>
+<td style="text-align: left">“Hola computadora dame una manzana y hazma la tarea.</td>
+<td style="text-align: left">Indeterminado“</td>
 <td style="text-align: left"><strong>Indeterminado</strong></td>
 <td style="text-align: left"><strong>Sí</strong></td>
 </tr>
@@ -170,7 +170,7 @@
 <li>Normalización, <em>stemming</em> o lematización.</li>
 <li>Asignación de puntuaciones (<em>scores</em>) ponderadas a cada categoría según los conceptos relevantes identificados.</li>
 </ul>
-<div class="my-8 not-prose">
+<div class="my-8 not-prose flex justify-center">
   <a 
     href="https://github.com/vrdtska/cloud-models-classifier/tree/version_nlp" 
     target="_blank" 
@@ -198,16 +198,59 @@
     <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">.tar.gz</span>
   </a>
 </div>
+<p>Se realizaron pruebas con distintas descripciones complejas, evitando usar explícitamente los términos IaaS, PaaS, SaaS o FaaS dentro del texto ingresado, las pruebas son las mismas que se utilizaron para el código refactorizado.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left">Entrada</th>
+<th style="text-align: left">Clasificación esperada</th>
+<th style="text-align: left">Clasificación obtenida</th>
+<th style="text-align: left">¿Fue correcta?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left">“Necesito máquinas virtuales, almacenamiento y redes configurables para instalar mi propio sistema operativo.”</td>
+<td style="text-align: left">IaaS</td>
+<td style="text-align: left"><strong>IaaS</strong></td>
+<td style="text-align: left"><strong>Sí</strong></td>
+</tr>
+<tr>
+<td style="text-align: left">“Quiero desplegar mi aplicación web sin administrar directamente servidores ni sistemas operativos.”</td>
+<td style="text-align: left">PaaS</td>
+<td style="text-align: left"><strong>PaaS</strong></td>
+<td style="text-align: left"><strong>Sí</strong></td>
+</tr>
+<tr>
+<td style="text-align: left">“Los empleados utilizan una aplicación de correo electrónico directamente desde el navegador y pagan una suscripción mensual.”</td>
+<td style="text-align: left">SaaS</td>
+<td style="text-align: left"><strong>SaaS</strong></td>
+<td style="text-align: left"><strong>Sí</strong></td>
+</tr>
+<tr>
+<td style="text-align: left">“Necesito ejecutar una función automáticamente cada vez que un usuario suba una imagen al almacenamiento Cloud.”</td>
+<td style="text-align: left">FaaS</td>
+<td style="text-align: left"><strong>FaaS</strong></td>
+<td style="text-align: left"><strong>Sí</strong></td>
+</tr>
+<tr>
+<td style="text-align: left">“Hola computadora dame una manzana y hazma la tarea.</td>
+<td style="text-align: left">Indeterminado“</td>
+<td style="text-align: left"><strong>Indeterminado</strong></td>
+<td style="text-align: left"><strong>Sí</strong></td>
+</tr>
+</tbody>
+</table>
 <p><strong>Prueba para detección FaaS</strong>
-<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba2/faas.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando prueba FaaS">
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/faas.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando prueba FaaS">
 <strong>Prueba para detección IaaS</strong>
-<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba2/iaas.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando una IaaS">
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/iaas.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando una IaaS">
 <strong>Prueba para detección Paas</strong>
-<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba2/paas.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando una PaaS">
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/paas.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando una PaaS">
 <strong>Prueba para detección SaaS</strong>
-<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba2/saas.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando una SaaS">
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/saas.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando una SaaS">
 <strong>Prueba para detección de texto ambiguo</strong>
-<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba2/na.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando un texto ambiguo."></p>
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/na.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando un texto ambiguo."></p>
 <hr>
 <h2 id="parte-6-interfaz-de-línea-de-comandos-en-java-cli">Parte 6: Interfaz de línea de comandos en Java (CLI)</h2>
 <p>Finalmente, se desarrolló una interfaz de línea de comandos (CLI) que reutiliza exactamente la misma lógica de clasificación central (NLP + Scoring) utilizada por la GUI.</p>
