@@ -3,6 +3,7 @@ title: "Ejercicio Guiado 1: Clasificador de modelos de servicios Cloud con Intel
 description: "Desarrollo de un clasificador de servicios Cloud (IaaS, PaaS, SaaS, FaaS) en Java utilizando reglas, Regex y procesamiento de lenguaje natural (NLP)."
 pubDate: 2026-08-17
 parcial: "parcial-1"
+githubRepo: 
 ---
 **Materia:** Integración de Aplicaciones Computacionales
 
@@ -238,15 +239,15 @@ Se compiló y ejecutó la aplicación para verificar los siguientes puntos:
 
 ### Evidencia de funcionamiento
 **Prueba para detección FaaS**
-![Captura de pantalla de la GUI inicial funcionando y mostrando prueba FaaS](/public/assets/entregas/parcial1/eg/1/prueba1/faas.png)
+![Captura de pantalla de la GUI inicial funcionando y mostrando prueba FaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba1/faas.png)
 **Prueba para detección IaaS**
-![Captura de pantalla de la GUI inicial funcionando y mostrando una IaaS](/public/assets/entregas/parcial1/eg/1/prueba1/iaas.png)
+![Captura de pantalla de la GUI inicial funcionando y mostrando una IaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba1/iaas.png)
 **Prueba para detección Paas**
-![Captura de pantalla de la GUI inicial funcionando y mostrando una PaaS](/public/assets/entregas/parcial1/eg/1/prueba1/paas.png)
+![Captura de pantalla de la GUI inicial funcionando y mostrando una PaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba1/paas.png)
 **Prueba para detección SaaS**
-![Captura de pantalla de la GUI inicial funcionando y mostrando una SaaS](/public/assets/entregas/parcial1/eg/1/prueba1/saas.png)
+![Captura de pantalla de la GUI inicial funcionando y mostrando una SaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba1/saas.png)
 **Prueba para detección de texto ambiguo**
-![Captura de pantalla de la GUI inicial funcionando y mostrando un texto ambiguo.](/public/assets/entregas/parcial1/eg/1/prueba1/na.png)
+![Captura de pantalla de la GUI inicial funcionando y mostrando un texto ambiguo.](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba1/na.png)
 
 ---
 
