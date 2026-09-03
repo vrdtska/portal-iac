@@ -130,7 +130,7 @@ Se realizaron pruebas con distintas descripciones complejas, evitando usar expl�
 | "Quiero desplegar mi aplicación web sin administrar directamente servidores ni sistemas operativos." | PaaS | **PaaS** | **Sí** |
 | "Los empleados utilizan una aplicación de correo electrónico directamente desde el navegador y pagan una suscripción mensual." | SaaS | **SaaS** | **Sí** |
 | "Necesito ejecutar una función automáticamente cada vez que un usuario suba una imagen al almacenamiento Cloud." | FaaS | **FaaS** | **Sí** |
-| Hola computadora dame una manzana y hazma la tarea. | Indeterminado | **Indeterminado** | **Sí** |
+| "Hola computadora dame una manzana y hazma la tarea. | Indeterminado" | **Indeterminado** | **Sí** |
 
 ### Evidencia de funcionamiento
 
@@ -155,7 +155,7 @@ Para mejorar la precisión del clasificador, se sustituyeron las reglas estricta
 * Normalización, *stemming* o lematización.
 * Asignación de puntuaciones (*scores*) ponderadas a cada categoría según los conceptos relevantes identificados.
 
-<div class="my-8 not-prose">
+<div class="my-8 not-prose flex justify-center">
   <a 
     href="https://github.com/vrdtska/cloud-models-classifier/tree/version_nlp" 
     target="_blank" 
@@ -185,16 +185,27 @@ Para mejorar la precisión del clasificador, se sustituyeron las reglas estricta
   </a>
 </div>
 
+Se realizaron pruebas con distintas descripciones complejas, evitando usar explícitamente los términos IaaS, PaaS, SaaS o FaaS dentro del texto ingresado, las pruebas son las mismas que se utilizaron para el código refactorizado.
+
+| Entrada | Clasificación esperada | Clasificación obtenida | ¿Fue correcta? |
+| :--- | :--- | :--- | :--- |
+| "Necesito máquinas virtuales, almacenamiento y redes configurables para instalar mi propio sistema operativo." | IaaS | **IaaS** | **Sí** |
+| "Quiero desplegar mi aplicación web sin administrar directamente servidores ni sistemas operativos." | PaaS | **PaaS** | **Sí** |
+| "Los empleados utilizan una aplicación de correo electrónico directamente desde el navegador y pagan una suscripción mensual." | SaaS | **SaaS** | **Sí** |
+| "Necesito ejecutar una función automáticamente cada vez que un usuario suba una imagen al almacenamiento Cloud." | FaaS | **FaaS** | **Sí** |
+| "Hola computadora dame una manzana y hazma la tarea. | Indeterminado" | **Indeterminado** | **Sí** |
+
+
 **Prueba para detección FaaS**
-![Captura de pantalla de la GUI inicial funcionando y mostrando prueba FaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba2/faas.png)
+![Captura de pantalla de la GUI inicial funcionando y mostrando prueba FaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/faas.png)
 **Prueba para detección IaaS**
-![Captura de pantalla de la GUI inicial funcionando y mostrando una IaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba2/iaas.png)
+![Captura de pantalla de la GUI inicial funcionando y mostrando una IaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/iaas.png)
 **Prueba para detección Paas**
-![Captura de pantalla de la GUI inicial funcionando y mostrando una PaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba2/paas.png)
+![Captura de pantalla de la GUI inicial funcionando y mostrando una PaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/paas.png)
 **Prueba para detección SaaS**
-![Captura de pantalla de la GUI inicial funcionando y mostrando una SaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba2/saas.png)
+![Captura de pantalla de la GUI inicial funcionando y mostrando una SaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/saas.png)
 **Prueba para detección de texto ambiguo**
-![Captura de pantalla de la GUI inicial funcionando y mostrando un texto ambiguo.](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba2/na.png)
+![Captura de pantalla de la GUI inicial funcionando y mostrando un texto ambiguo.](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba3/na.png)
 
 
 ---

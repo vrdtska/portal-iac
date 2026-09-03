@@ -1,4 +1,4 @@
-<div class="my-8 not-prose">
+<div class="my-8 not-prose flex justify-center">
   <a 
     href="https://github.com/vrdtska/nombre-del-repo" 
     target="_blank" 
