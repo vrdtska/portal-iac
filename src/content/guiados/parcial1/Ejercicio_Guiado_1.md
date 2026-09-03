@@ -3,7 +3,6 @@ title: "Ejercicio Guiado 1: Clasificador de modelos de servicios Cloud con Intel
 description: "Desarrollo de un clasificador de servicios Cloud (IaaS, PaaS, SaaS, FaaS) en Java utilizando reglas, Regex y procesamiento de lenguaje natural (NLP)."
 pubDate: 2026-08-17
 parcial: "parcial-1"
-githubRepo: 
 ---
 **Materia:** Integración de Aplicaciones Computacionales
 
@@ -276,7 +275,21 @@ El código inicial fue analizado y refactorizado para mejorar su estructura. Se 
   </a>
 </div>
 
-## Parte 4: Evaluar el clasificador
+
+<div class="my-8 not-prose flex justify-center">
+  <a 
+    href="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/refactorizado.tar.gz" 
+    download
+    class="inline-flex items-center gap-3 px-5 py-3 bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700/80 hover:border-emerald-500/50 rounded-xl font-medium text-sm transition-all duration-200 shadow-lg shadow-black/20 hover:-translate-y-0.5 group w-fit no-underline">
+    <svg class="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>
+    <span>Descargar Código Fuente</span>
+    <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">.tar.gz</span>
+  </a>
+</div>
+
+--- 
 
 Se realizaron pruebas con distintas descripciones complejas, evitando usar explícitamente los términos IaaS, PaaS, SaaS o FaaS dentro del texto ingresado.
 
