@@ -278,7 +278,7 @@ El código inicial fue analizado y refactorizado para mejorar su estructura. Se 
 
 <div class="my-8 not-prose flex justify-center">
   <a 
-    href="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/refactorizado.tar.gz" 
+    href="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/code/refactorizado.tar.gz" 
     download
     class="inline-flex items-center gap-3 px-5 py-3 bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700/80 hover:border-emerald-500/50 rounded-xl font-medium text-sm transition-all duration-200 shadow-lg shadow-black/20 hover:-translate-y-0.5 group w-fit no-underline">
     <svg class="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -289,7 +289,6 @@ El código inicial fue analizado y refactorizado para mejorar su estructura. Se 
   </a>
 </div>
 
---- 
 
 Se realizaron pruebas con distintas descripciones complejas, evitando usar explícitamente los términos IaaS, PaaS, SaaS o FaaS dentro del texto ingresado.
 
