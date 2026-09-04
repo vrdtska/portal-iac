@@ -31,17 +31,21 @@ La aplicación permitirá administrar usuarios, libros, autores, géneros, forma
 
 ### Requisitos funcionales
 
-* Registro, inicio y cierre de sesión.
-* Consulta y búsqueda del catálogo por ISBN y título.
-* CRUD de libros, autores, géneros, formatos, categorías y conceptos.
-* Relaciones múltiples entre libros y autores, géneros y conceptos.
-* Carga, edición, eliminación y selección de portada para imágenes.
-* Control de precio y stock.
-* Administración exclusiva para un único usuario Administrador.
+Los siguientes requisitos son los requisitos funcionales detectados para la aplicación a desarrollar:
+
+* **RF1**: Registro, inicio y cierre de sesión.
+* **RF2**: Consulta y búsqueda del catálogo por ISBN y título.
+* **RF3**: CRUD de libros, autores, géneros, formatos, categorías y conceptos.
+* **RF4**: Relaciones múltiples entre libros y autores, géneros y conceptos.
+* **RF5**: Carga, edición, eliminación y selección de portada para imágenes.
+* **RF6**: Control de precio y stock.
+* **RF7**: Administración exclusiva para un único usuario Administrador.
 
 ### Actores y riesgos
 
-| Actor | Puede realizar | Debe rechazarse |
+Se definen los siguientes actores como los principales usuarios de la página a desarrollar:
+
+| **Actor** | **Puede realizar**| **Debe rechazarse** |
 | :--- | :--- | :--- |
 | Visitante | Registro e inicio de sesión | Catálogo privado y administración |
 | Usuario registrado | Consultar libros y conceptos permitidos | CRUD y funciones administrativas |

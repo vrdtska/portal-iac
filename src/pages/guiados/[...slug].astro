@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
+import Mermaid from '../../components/Mermaid.astro';
 import '../../styles/global.css';
 
 export async function getStaticPaths() {
@@ -111,6 +112,7 @@ const tipoDeEntrada = "Ejercicio Guiado"; // Cambiar a "Tarea" en el otro archiv
           prose-img:rounded-2xl prose-img:border prose-img:border-slate-800 prose-img:shadow-xl
           prose-ul:list-disc prose-ol:list-decimal">
           <Content />
+          <Mermaid />
         </article>
       </main>
       
