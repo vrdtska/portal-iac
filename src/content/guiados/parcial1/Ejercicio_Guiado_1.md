@@ -14,6 +14,10 @@ parcial: "parcial-1"
 
 **Fecha:** 2026-08-17
 
+## Introducción
+
+La computación en la nube ofrece distintos modelos de servicio que distribuyen de manera diferente las responsabilidades entre el proveedor y el usuario. Identificar si un servicio corresponde a IaaS, PaaS, SaaS o FaaS es importante para comprender sus características y elegir la alternativa adecuada según las necesidades de una aplicación. En este ejercicio se desarrolla y evalúa un clasificador en Java capaz de reconocer estos modelos a partir de descripciones escritas en lenguaje natural. El trabajo muestra una evolución progresiva desde reglas y expresiones regulares hasta técnicas básicas de Procesamiento de Lenguaje Natural, además de su integración en interfaces gráfica y de línea de comandos.
+
 ## Objetivo
 Desarrollar una aplicación capaz de analizar descripciones relacionadas con servicios de Cloud Computing y clasificarlas automáticamente como IaaS, PaaS, SaaS o FaaS. El desarrollo evoluciona desde un clasificador basado en reglas (Regex) hacia una solución básica de Procesamiento de Lenguaje Natural (NLP).
 
@@ -214,23 +218,47 @@ Se realizaron pruebas con distintas descripciones complejas, evitando usar expl�
 
 Finalmente, se desarrolló una interfaz de línea de comandos (CLI) que reutiliza exactamente la misma lógica de clasificación central (NLP + Scoring) utilizada por la GUI.
 
-### Evidencia de ejecución CLI
-Ejemplo de comando ejecutado:
-`java CloudClassifier "máquinas virtuales almacenamiento redes"`
+Se realizaron pruebas con distintas descripciones complejas, evitando usar explícitamente los términos IaaS, PaaS, SaaS o FaaS dentro del texto ingresado, las pruebas son las mismas que se utilizaron para el código refactorizado y el código NLP.
 
-![Captura de pantalla de la terminal ejecutando el clasificador CLI](/images/placeholder-cli-execution.png)
 
-<details>
-<summary>Haz clic para expandir el código de la interfaz CLI</summary>
+| Entrada | Clasificación esperada | Clasificación obtenida | ¿Fue correcta? |
+| :--- | :--- | :--- | :--- |
+| "Necesito máquinas virtuales, almacenamiento y redes configurables para instalar mi propio sistema operativo." | IaaS | **IaaS** | **Sí** |
+| "Quiero desplegar mi aplicación web sin administrar directamente servidores ni sistemas operativos." | PaaS | **PaaS** | **Sí** |
+| "Los empleados utilizan una aplicación de correo electrónico directamente desde el navegador y pagan una suscripción mensual." | SaaS | **SaaS** | **Sí** |
+| "Necesito ejecutar una función automáticamente cada vez que un usuario suba una imagen al almacenamiento Cloud." | FaaS | **FaaS** | **Sí** |
+| "Hola computadora dame una manzana y hazma la tarea. | Indeterminado" | **Indeterminado** | **Sí** |
 
-```java
-// Reemplaza este bloque con el archivo principal que maneja los argumentos de la línea de comandos.
 
-public class CLIMain {
-    public static void main(String[] args) {
-        // Procesamiento de args y llamado a CloudClassifierLogic...
-    }
-}
-```
+### Evidencia de ejecución 
+**Prueba para detección FaaS**
+![Captura de pantalla de la GUI inicial funcionando y mostrando prueba FaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba4/FaaS.png)
+**Prueba para detección IaaS**
+![Captura de pantalla de la GUI inicial funcionando y mostrando una IaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba4/IaaS.png)
+**Prueba para detección Paas**
+![Captura de pantalla de la GUI inicial funcionando y mostrando una PaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba4/PaaS.png)
+**Prueba para detección SaaS**
+![Captura de pantalla de la GUI inicial funcionando y mostrando una SaaS](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba4/SaaS.png)
+**Prueba para detección de texto ambiguo**
+![Captura de pantalla de la GUI inicial funcionando y mostrando un texto ambiguo.](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba4/na.png)
+**Prueba version CLI**
+![Captura de pantalla de la GUI inicial funcionando y mostrando un texto ambiguo.](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba4/cli.png)
+
+
+
+
+*Doy mi palabra que he realizado esta actividad con integridad académica.*
 
 </details>
+
+## Conclusión
+
+El ejercicio permitió construir un clasificador funcional de modelos de servicios Cloud y observar su evolución en varias etapas. La versión inicial basada en reglas permitió resolver casos sencillos, mientras que la refactorización mejoró la organización del código, la validación de entradas y la separación entre la interfaz y la lógica de negocio. Posteriormente, el uso de técnicas básicas de NLP y puntuaciones ponderadas permitió analizar descripciones más naturales sin depender de que el usuario escribiera directamente el nombre de la categoría. Finalmente, la reutilización de la lógica central en la GUI y en la CLI demostró la importancia de diseñar componentes independientes y reutilizables. Las pruebas realizadas obtuvieron las clasificaciones esperadas para los ejemplos de IaaS, PaaS, SaaS, FaaS y textos indeterminados.
+
+## Referencias consultadas
+
+1. National Institute of Standards and Technology. *The NIST Definition of Cloud Computing*. https://doi.org/10.6028/NIST.SP.800-145
+2. Oracle. *What is Cloud Computing?* https://www.oracle.com/cloud/what-is-cloud-computing/
+3. Stanford University. *The Stanford Natural Language Processing Group*. https://nlp.stanford.edu/
+4. Oracle. *Java Platform, Standard Edition Documentation*. https://docs.oracle.com/en/java/javase/
+5. Proyecto de implementación del clasificador Cloud en GitHub. https://github.com/vrdtska/cloud-models-classifier
