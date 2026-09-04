@@ -1,7 +1,7 @@
 ---
 title: "Tarea 4: Interoperabilidad SOAP"
 description: "Consumo del mismo servicio SOAP desde un cliente generado en un lenguaje diferente al servidor."
-pubDate: 2026-08-31
+pubDate: 2026-09-07
 parcial: "parcial-1"
 ---
 
@@ -9,7 +9,7 @@ parcial: "parcial-1"
 **Nombre:** Santiago López Cervantes  
 **Matrícula:** 612956  
 **Grupo y hora:** MyV, 4:00 p.m.  
-**Fecha:** 2026-08-31
+**Fecha:** 2026-09-07
 
 ## Introducción
 

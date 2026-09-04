@@ -1,7 +1,7 @@
 ---
 title: "Tarea 5: Medición técnica y reflexión SOAP"
 description: "Métricas del servicio SOAP para una comparación posterior con REST y reflexión sobre sus decisiones técnicas."
-pubDate: 2026-08-31
+pubDate: 2026-09-07
 parcial: "parcial-1"
 ---
 
@@ -9,7 +9,7 @@ parcial: "parcial-1"
 **Nombre:** Santiago López Cervantes  
 **Matrícula:** 612956  
 **Grupo y hora:** MyV, 4:00 p.m.  
-**Fecha:** 2026-08-31
+**Fecha:** 2026-09-07
 
 ## Introducción
 
