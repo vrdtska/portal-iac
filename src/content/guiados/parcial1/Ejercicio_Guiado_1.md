@@ -245,15 +245,11 @@ Se realizaron pruebas con distintas descripciones complejas, evitando usar expl�
 ![Captura de pantalla de la GUI inicial funcionando y mostrando un texto ambiguo.](https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba4/cli.png)
 
 
-
-
-*Doy mi palabra que he realizado esta actividad con integridad académica.*
-
-</details>
-
 ## Conclusión
 
 El ejercicio permitió construir un clasificador funcional de modelos de servicios Cloud y observar su evolución en varias etapas. La versión inicial basada en reglas permitió resolver casos sencillos, mientras que la refactorización mejoró la organización del código, la validación de entradas y la separación entre la interfaz y la lógica de negocio. Posteriormente, el uso de técnicas básicas de NLP y puntuaciones ponderadas permitió analizar descripciones más naturales sin depender de que el usuario escribiera directamente el nombre de la categoría. Finalmente, la reutilización de la lógica central en la GUI y en la CLI demostró la importancia de diseñar componentes independientes y reutilizables. Las pruebas realizadas obtuvieron las clasificaciones esperadas para los ejemplos de IaaS, PaaS, SaaS, FaaS y textos indeterminados.
+
+*Doy mi palabra que he realizado esta actividad con integridad académica.*
 
 ## Referencias consultadas
 
@@ -262,3 +258,5 @@ El ejercicio permitió construir un clasificador funcional de modelos de servici
 3. Stanford University. *The Stanford Natural Language Processing Group*. https://nlp.stanford.edu/
 4. Oracle. *Java Platform, Standard Edition Documentation*. https://docs.oracle.com/en/java/javase/
 5. Proyecto de implementación del clasificador Cloud en GitHub. https://github.com/vrdtska/cloud-models-classifier
+
+</details>
