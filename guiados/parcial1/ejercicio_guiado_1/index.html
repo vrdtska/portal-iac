@@ -11,6 +11,8 @@
 <p><strong>Matrícula:</strong> 612956</p>
 <p><strong>Grupo y Hora:</strong> MyV, 4:00 p.m.</p>
 <p><strong>Fecha:</strong> 2026-08-17</p>
+<h2 id="introducción">Introducción</h2>
+<p>La computación en la nube ofrece distintos modelos de servicio que distribuyen de manera diferente las responsabilidades entre el proveedor y el usuario. Identificar si un servicio corresponde a IaaS, PaaS, SaaS o FaaS es importante para comprender sus características y elegir la alternativa adecuada según las necesidades de una aplicación. En este ejercicio se desarrolla y evalúa un clasificador en Java capaz de reconocer estos modelos a partir de descripciones escritas en lenguaje natural. El trabajo muestra una evolución progresiva desde reglas y expresiones regulares hasta técnicas básicas de Procesamiento de Lenguaje Natural, además de su integración en interfaces gráfica y de línea de comandos.</p>
 <h2 id="objetivo">Objetivo</h2>
 <p>Desarrollar una aplicación capaz de analizar descripciones relacionadas con servicios de Cloud Computing y clasificarlas automáticamente como IaaS, PaaS, SaaS o FaaS. El desarrollo evoluciona desde un clasificador basado en reglas (Regex) hacia una solución básica de Procesamiento de Lenguaje Natural (NLP).</p>
 <hr>
@@ -254,18 +256,72 @@
 <hr>
 <h2 id="parte-6-interfaz-de-línea-de-comandos-en-java-cli">Parte 6: Interfaz de línea de comandos en Java (CLI)</h2>
 <p>Finalmente, se desarrolló una interfaz de línea de comandos (CLI) que reutiliza exactamente la misma lógica de clasificación central (NLP + Scoring) utilizada por la GUI.</p>
-<h3 id="evidencia-de-ejecución-cli">Evidencia de ejecución CLI</h3>
-<p>Ejemplo de comando ejecutado:
-<code>java CloudClassifier "máquinas virtuales almacenamiento redes"</code></p>
-<p><img src="/images/placeholder-cli-execution.png" alt="Captura de pantalla de la terminal ejecutando el clasificador CLI"></p>
-<details>
-<summary>Haz clic para expandir el código de la interfaz CLI</summary>
-<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="java"><code><span class="line"><span style="color:#6A737D">// Reemplaza este bloque con el archivo principal que maneja los argumentos de la línea de comandos.</span></span>
-<span class="line"></span>
-<span class="line"><span style="color:#F97583">public</span><span style="color:#F97583"> class</span><span style="color:#B392F0"> CLIMain</span><span style="color:#E1E4E8"> {</span></span>
-<span class="line"><span style="color:#F97583">    public</span><span style="color:#F97583"> static</span><span style="color:#F97583"> void</span><span style="color:#B392F0"> main</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">String</span><span style="color:#E1E4E8">[] </span><span style="color:#FFAB70">args</span><span style="color:#E1E4E8">) {</span></span>
-<span class="line"><span style="color:#6A737D">        // Procesamiento de args y llamado a CloudClassifierLogic...</span></span>
-<span class="line"><span style="color:#E1E4E8">    }</span></span>
-<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<p>Se realizaron pruebas con distintas descripciones complejas, evitando usar explícitamente los términos IaaS, PaaS, SaaS o FaaS dentro del texto ingresado, las pruebas son las mismas que se utilizaron para el código refactorizado y el código NLP.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left">Entrada</th>
+<th style="text-align: left">Clasificación esperada</th>
+<th style="text-align: left">Clasificación obtenida</th>
+<th style="text-align: left">¿Fue correcta?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left">“Necesito máquinas virtuales, almacenamiento y redes configurables para instalar mi propio sistema operativo.”</td>
+<td style="text-align: left">IaaS</td>
+<td style="text-align: left"><strong>IaaS</strong></td>
+<td style="text-align: left"><strong>Sí</strong></td>
+</tr>
+<tr>
+<td style="text-align: left">“Quiero desplegar mi aplicación web sin administrar directamente servidores ni sistemas operativos.”</td>
+<td style="text-align: left">PaaS</td>
+<td style="text-align: left"><strong>PaaS</strong></td>
+<td style="text-align: left"><strong>Sí</strong></td>
+</tr>
+<tr>
+<td style="text-align: left">“Los empleados utilizan una aplicación de correo electrónico directamente desde el navegador y pagan una suscripción mensual.”</td>
+<td style="text-align: left">SaaS</td>
+<td style="text-align: left"><strong>SaaS</strong></td>
+<td style="text-align: left"><strong>Sí</strong></td>
+</tr>
+<tr>
+<td style="text-align: left">“Necesito ejecutar una función automáticamente cada vez que un usuario suba una imagen al almacenamiento Cloud.”</td>
+<td style="text-align: left">FaaS</td>
+<td style="text-align: left"><strong>FaaS</strong></td>
+<td style="text-align: left"><strong>Sí</strong></td>
+</tr>
+<tr>
+<td style="text-align: left">“Hola computadora dame una manzana y hazma la tarea.</td>
+<td style="text-align: left">Indeterminado“</td>
+<td style="text-align: left"><strong>Indeterminado</strong></td>
+<td style="text-align: left"><strong>Sí</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="evidencia-de-ejecución">Evidencia de ejecución</h3>
+<p><strong>Prueba para detección FaaS</strong>
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba4/FaaS.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando prueba FaaS">
+<strong>Prueba para detección IaaS</strong>
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba4/IaaS.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando una IaaS">
+<strong>Prueba para detección Paas</strong>
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba4/PaaS.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando una PaaS">
+<strong>Prueba para detección SaaS</strong>
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba4/SaaS.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando una SaaS">
+<strong>Prueba para detección de texto ambiguo</strong>
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba4/na.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando un texto ambiguo.">
+<strong>Prueba version CLI</strong>
+<img src="https://ubiquitous.udem.edu/~iac-612956/assets/entregas/parcial1/eg/1/prueba4/cli.png" alt="Captura de pantalla de la GUI inicial funcionando y mostrando un texto ambiguo."></p>
+<p><em>Doy mi palabra que he realizado esta actividad con integridad académica.</em></p>
 </details>
+<h2 id="conclusión">Conclusión</h2>
+<p>El ejercicio permitió construir un clasificador funcional de modelos de servicios Cloud y observar su evolución en varias etapas. La versión inicial basada en reglas permitió resolver casos sencillos, mientras que la refactorización mejoró la organización del código, la validación de entradas y la separación entre la interfaz y la lógica de negocio. Posteriormente, el uso de técnicas básicas de NLP y puntuaciones ponderadas permitió analizar descripciones más naturales sin depender de que el usuario escribiera directamente el nombre de la categoría. Finalmente, la reutilización de la lógica central en la GUI y en la CLI demostró la importancia de diseñar componentes independientes y reutilizables. Las pruebas realizadas obtuvieron las clasificaciones esperadas para los ejemplos de IaaS, PaaS, SaaS, FaaS y textos indeterminados.</p>
+<h2 id="referencias-consultadas">Referencias consultadas</h2>
+<ol>
+<li>National Institute of Standards and Technology. <em>The NIST Definition of Cloud Computing</em>. <a href="https://doi.org/10.6028/NIST.SP.800-145">https://doi.org/10.6028/NIST.SP.800-145</a></li>
+<li>Oracle. <em>What is Cloud Computing?</em> <a href="https://www.oracle.com/cloud/what-is-cloud-computing/">https://www.oracle.com/cloud/what-is-cloud-computing/</a></li>
+<li>Stanford University. <em>The Stanford Natural Language Processing Group</em>. <a href="https://nlp.stanford.edu/">https://nlp.stanford.edu/</a></li>
+<li>Oracle. <em>Java Platform, Standard Edition Documentation</em>. <a href="https://docs.oracle.com/en/java/javase/">https://docs.oracle.com/en/java/javase/</a></li>
+<li>Proyecto de implementación del clasificador Cloud en GitHub. <a href="https://github.com/vrdtska/cloud-models-classifier">https://github.com/vrdtska/cloud-models-classifier</a></li>
+</ol>
 </article></main><!-- Pie de página --><footer class="mt-12 text-center text-xs font-medium text-slate-500">Actualizado por última vez el 17 de agosto de 2026</footer></div><!-- Botón flotante para regresar arriba --><button id="back-to-top" aria-label="Regresar arriba" class="fixed bottom-6 right-6 z-50 p-3 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 rounded-2xl shadow-2xl backdrop-blur-md transition-all duration-300 opacity-0 pointer-events-none translate-y-4 hover:-translate-y-0.5"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"></path></svg></button><!-- Script de comportamiento del botón flotante --><script type="module">var e=document.getElementById(`document-header`),t=document.getElementById(`back-to-top`);e&&t&&(new IntersectionObserver(([e])=>{e.isIntersecting?(t.classList.add(`opacity-0`,`pointer-events-none`,`translate-y-4`),t.classList.remove(`opacity-100`,`translate-y-0`)):(t.classList.remove(`opacity-0`,`pointer-events-none`,`translate-y-4`),t.classList.add(`opacity-100`,`translate-y-0`))},{threshold:.1}).observe(e),t.addEventListener(`click`,()=>{window.scrollTo({top:0,behavior:`smooth`})}));</script><!-- Script para zoom en imágenes de Markdown --><script type="module" src="/~iac-612956/_astro/_...slug_.astro_astro_type_script_index_1_lang.B2Yxx1bl.js"></script><script type="module">window.addEventListener(`DOMContentLoaded`,()=>{mediumZoom(`article img`,{margin:24,background:`#020617ee`,scrollOffset:0})});</script></body></html>
