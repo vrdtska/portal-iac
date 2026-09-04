@@ -13,7 +13,7 @@ parcial: "parcial-1"
 
 **Grupo y hora:** MyV, 4:00 p.m.
 
-**Fecha:** 2026-08-08
+**Fecha:** 2026-08-17
 
 ## Introducción
 
