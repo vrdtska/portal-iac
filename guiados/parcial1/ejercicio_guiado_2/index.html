@@ -12,78 +12,617 @@
 <p><strong>Grupo y hora:</strong> MyV, 4:00 p.m.</p>
 <p><strong>Fecha:</strong> 2026-08-31</p>
 <h2 id="introducción">Introducción</h2>
-<p>Este ejercicio aborda el desarrollo de una aplicación web monolítica para administrar el catálogo de una librería. La solución integra Node.js, Express, EJS y PostgreSQL, y se despliega en una instancia de Compute Engine mediante GCP SDK CLI. El trabajo requiere justificar las decisiones de arquitectura, modelar los datos hasta 4FN, implementar autenticación, CRUD, imágenes y conceptos asociados a libros, y publicar evidencias reproducibles.</p>
+<p>Este ejercicio aborda el desarrollo exhaustivo de una aplicación web monolítica orientada a la gestión integral y persistencia del catálogo de una librería profesional. La arquitectura desacopla responsabilidades internas mediante capas lógicas cohesivas (presentación con renderizado en servidor, orquestación de rutas, middleware de seguridad, servicios de negocio y acceso a datos parametrizado), manteniendo al mismo tiempo una única unidad de empaquetado y despliegue.</p>
+<p>La pila tecnológica se fundamenta en <strong>Node.js</strong>, <strong>Express</strong>, <strong>EJS</strong> y <strong>PostgreSQL</strong>, ejecutándose sobre una máquina virtual con <strong>CentOS Stream 10</strong> en <strong>Google Cloud Platform (GCP Compute Engine)</strong> aprovisionada vía <strong>GCP SDK CLI</strong>. La solución implementa autenticación basada en sesiones seguras, control de acceso basado en roles (RBAC), control granular de concurrencia y transacciones ACID para relaciones complejas, así como un proceso formal de normalización relacional hasta la <strong>Cuarta Forma Normal (4FN)</strong>.</p>
+<hr>
 <h2 id="objetivo">Objetivo</h2>
-<p>Diseñar, construir, probar, desplegar y documentar una aplicación web monolítica server-side para la gestión de una librería, utilizando acceso directo y seguro a PostgreSQL desde Node.js.</p>
+<p>Diseñar, construir, probar, desplegar y documentar una aplicación web monolítica <em>server-side</em> de alto rendimiento y seguridad para la administración de un catálogo editorial, garantizando la integridad referencial en PostgreSQL, el aislamiento de red mediante proxy inverso (Apache/NGINX) y la mitigación rigurosa de vulnerabilidades del catálogo OWASP Top 10.</p>
+<hr>
 <h2 id="alcance-y-restricciones">Alcance y restricciones</h2>
-<p>La aplicación permitirá administrar usuarios, libros, autores, géneros, formatos, categorías, imágenes y conceptos. Utilizará Node.js, Express y EJS en una sola unidad desplegable, con consultas SQL parametrizadas mediante <code>pg</code>. No se desarrollarán APIs REST, GraphQL, SOAP ni microservicios, y Node.js escuchará únicamente en <code>127.0.0.1:3000</code> detrás de Apache o NGINX.</p>
-<h2 id="parte-1-análisis-del-problema">Parte 1: Análisis del problema</h2>
-<h3 id="requisitos-funcionales">Requisitos funcionales</h3>
-<p>Los siguientes requisitos son los requisitos funcionales detectados para la aplicación a desarrollar:</p>
+<h3 id="alcance">Alcance</h3>
 <ul>
-<li><strong>RF1</strong>: Registro, inicio y cierre de sesión.</li>
-<li><strong>RF2</strong>: Consulta y búsqueda del catálogo por ISBN y título.</li>
-<li><strong>RF3</strong>: CRUD de libros, autores, géneros, formatos, categorías y conceptos.</li>
-<li><strong>RF4</strong>: Relaciones múltiples entre libros y autores, géneros y conceptos.</li>
-<li><strong>RF5</strong>: Carga, edición, eliminación y selección de portada para imágenes.</li>
-<li><strong>RF6</strong>: Control de precio y stock.</li>
-<li><strong>RF7</strong>: Administración exclusiva para un único usuario Administrador.</li>
+<li>Administración integral del ciclo de vida del catálogo editorial: libros, autores, géneros literarios, formatos físicos/digitales, categorías y conceptos temáticos.</li>
+<li>Gestión de recursos multimedia (imágenes de portada y muestras), con validación de cabeceras binarias (MIME), sanitización de metadatos y renombrado criptográfico.</li>
+<li>Sistema de autenticación con hashing resistente (<code>bcrypt</code>/<code>argon2</code>) y control estricto de roles (<em>Visitante</em>, <em>Usuario registrado</em>, <em>Administrador</em>).</li>
+<li>Despliegue automatizado en infraestructura cloud con balanceo de carga/proxy inverso y aislamiento del proceso Node.js en interfaz <em>loopback</em>.</li>
 </ul>
-<h3 id="actores-y-riesgos">Actores y riesgos</h3>
-<p>Se definen los siguientes actores como los principales usuarios de la página a desarrollar:</p>
+<h3 id="restricciones-técnicas-y-de-diseño">Restricciones técnicas y de diseño</h3>
+<ol>
+<li><strong>Unidad monolítica estricta</strong>: No se permite la fragmentación en microservicios, microfrontends ni el uso de APIs desacopladas de tipo SPA (Single Page Application), REST pura consumida por frontend externo, GraphQL o SOAP.</li>
+<li><strong>Conexión directa y parametrizada</strong>: La interacción con PostgreSQL debe realizarse mediante el driver nativo <code>pg</code> utilizando <em>Prepared Statements</em> o consultas parametrizadas obligatorias. Se prohíbe el uso de ORMs complejos que oculten el esquema o generen sobrecarga no justificada.</li>
+<li><strong>Aislamiento de red</strong>: El proceso de Node.js debe escuchar exclusivamente en el puerto <code>127.0.0.1:3000</code>. Todo el tráfico entrante de clientes debe ser gestionado y filtrado por un proxy inverso (<strong>Apache HTTP Server</strong> o <strong>NGINX</strong>) en los puertos estándares 80/443 con prefijo de ruta <code>/library</code>.</li>
+<li><strong>Regla de administrador único</strong>: La base de datos y la capa de servicios deben impedir terminantemente la existencia de más de una cuenta con rol <code>ADMIN</code>.</li>
+</ol>
+<hr>
+<h2 id="parte-1-análisis-del-problema-y-modelo-de-actores">Parte 1: Análisis del problema y modelo de actores</h2>
+<h3 id="requisitos-funcionales-detallados">Requisitos funcionales detallados</h3>
+<ul>
+<li><strong>RF1 - Gestión de Identidad y Sesiones</strong>: Registro de usuarios nuevos (por defecto rol cliente), inicio de sesión con validación de hash criptográfico, manejo de sesiones persistentes en base de datos con expiración y cierre seguro de sesión (<em>logout</em> con invalidación de cookie).</li>
+<li><strong>RF2 - Consulta y Búsqueda Avanzada</strong>: Visualización paginada del catálogo público, filtros dinámicos por género, autor, rango de precios y búsqueda fonética o por subcadena en título e ISBN-13 con índices B-Tree/GIN optimizados.</li>
+<li><strong>RF3 - Operaciones CRUD Centralizadas</strong>: Creación, consulta, modificación y baja lógica/física de entidades maestras (libros, autores, categorías, formatos y conceptos).</li>
+<li><strong>RF4 - Manejo de Cardinalidad M:N Compleja</strong>: Asociación atómica y transaccional entre un libro y múltiples autores, múltiples géneros y múltiples etiquetas conceptuales sin redundancia multivaluada.</li>
+<li><strong>RF5 - Gestión Segura de Archivos (Uploads)</strong>: Carga de portadas con verificación de <em>magic numbers</em> (firmas binarias), limitación de tamaño máximo a 2 MB por archivo, almacenamiento en disco bajo nombres UUIDv4 y registro relacional de metadatos.</li>
+<li><strong>RF6 - Control de Inventario y Precios</strong>: Restricciones de integridad de dominio (<code>CHECK (stock &gt;= 0)</code>, <code>CHECK (price &gt; 0.00)</code>) con actualización atómica de existencias.</li>
+<li><strong>RF7 - Control de Acceso y Gestión Administrativa</strong>: Rutas protegidas exclusivas para el usuario Administrador con guardas a nivel de middleware.</li>
+</ul>
+<h3 id="matriz-de-actores-permisos-y-restricciones">Matriz de actores, permisos y restricciones</h3>
+<p>Para el sistema de gestión bibliotecario, se han identificado los siguientes actores como aquellos actores involucrados en la operación de la aplicación. Se define en la siguiente tabla que privilegios y operaciones tienen permitidas, con el objetivo de mantener una trazabilidad de las acciones de los actores en la aplicación a desarrollar.</p>
 <table>
 <thead>
 <tr>
 <th style="text-align: left"><strong>Actor</strong></th>
-<th style="text-align: left"><strong>Puede realizar</strong></th>
-<th style="text-align: left"><strong>Debe rechazarse</strong></th>
+<th style="text-align: left"><strong>Privilegios y Operaciones Permitidas</strong></th>
+<th style="text-align: left"><strong>Restricciones y Respuestas Esperadas</strong></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left">Visitante</td>
-<td style="text-align: left">Registro e inicio de sesión</td>
-<td style="text-align: left">Catálogo privado y administración</td>
+<td style="text-align: left"><strong>Visitante (Anónimo)</strong></td>
+<td style="text-align: left">• Exploración del catálogo público general.<br>• Consulta de ficha técnica de libros.<br>• Acceso a formularios de registro e inicio de sesión.</td>
+<td style="text-align: left">• Denegación de acceso a <code>/admin/*</code> y <code>/user/*</code> (HTTP 401 / Redirección a Login).<br>• Prohibida la descarga de fichas de auditoría.</td>
 </tr>
 <tr>
-<td style="text-align: left">Usuario registrado</td>
-<td style="text-align: left">Consultar libros y conceptos permitidos</td>
-<td style="text-align: left">CRUD y funciones administrativas</td>
+<td style="text-align: left"><strong>Usuario Registrado</strong></td>
+<td style="text-align: left">• Acceso a perfil personal.<br>• Consulta de conceptos y notas adicionales del catálogo.<br>• Cambio de contraseña propia.</td>
+<td style="text-align: left">• Prohibida cualquier mutación del catálogo (POST/PUT/DELETE sobre libros, autores o catálogos).<br>• Intento de escalada a <code>/admin/*</code> devuelve HTTP 403 Forbidden.</td>
 </tr>
 <tr>
-<td style="text-align: left">Administrador</td>
-<td style="text-align: left">CRUD y administración completa</td>
-<td style="text-align: left">Crear un segundo Administrador</td>
+<td style="text-align: left"><strong>Administrador Único</strong></td>
+<td style="text-align: left">• Control total CRUD sobre libros, autores, géneros, formatos, categorías, conceptos e imágenes.<br>• Panel de control de stock y auditoría de sesiones.</td>
+<td style="text-align: left">• <strong>Invariable</strong>: No puede crear ni promover a un segundo usuario con rol <code>ADMIN</code>.<br>• No puede eliminar su propia cuenta si deja al sistema sin administrador activo.</td>
 </tr>
 </tbody>
 </table>
-<p>Los riesgos principales son acceso no autorizado, SQL Injection, archivos peligrosos, exposición de credenciales, eliminación accidental y publicación de datos sensibles.</p>
-<h2 id="parte-2-arquitectura-y-organización">Parte 2: Arquitectura y organización</h2>
-<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#F97583">flowchart</span><span style="color:#B392F0"> LR</span></span>
-<span class="line"><span style="color:#FFAB70">	B</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">Navegador</span><span style="color:#F97583">]</span><span style="color:#F97583"> --&gt;</span><span style="color:#FFAB70"> P</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">Apache o NGINX</span><span style="color:#F97583">]</span></span>
-<span class="line"><span style="color:#FFAB70">	P </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> A</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">Node.js + Express + EJS</span><span style="color:#F97583">]</span></span>
-<span class="line"><span style="color:#FFAB70">	A </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> R</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">Rutas y controladores</span><span style="color:#F97583">]</span></span>
-<span class="line"><span style="color:#FFAB70">	R </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> S</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">Servicios y middleware</span><span style="color:#F97583">]</span></span>
-<span class="line"><span style="color:#FFAB70">	S </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> D</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">Acceso parametrizado con pg</span><span style="color:#F97583">]</span></span>
-<span class="line"><span style="color:#FFAB70">	D </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> DB</span><span style="color:#F97583">[(</span><span style="color:#9ECBFF">PostgreSQL</span><span style="color:#F97583">)]</span></span>
-<span class="line"><span style="color:#FFAB70">	A </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> U</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">uploads e imágenes</span><span style="color:#F97583">]</span></span></code></pre>
-<p>La solución sigue siendo monolítica porque presentación, rutas, lógica, middleware y acceso a datos se despliegan como una sola aplicación, aunque el código esté separado en módulos. <code>app.js</code> inicializa Express; <code>config/</code> gestiona la conexión; <code>routes/</code> coordina solicitudes; <code>services/</code> concentra reglas; <code>middleware/</code> aplica autenticación, autorización y errores; <code>views/</code> contiene plantillas EJS; <code>public/</code> contiene recursos estáticos y <code>uploads/</code> administra archivos.</p>
-<h2 id="parte-3-diseño-de-datos-y-4fn">Parte 3: Diseño de datos y 4FN</h2>
-<p>El modelo separa <code>books</code>, <code>authors</code>, <code>genres</code>, <code>formats</code>, <code>categories</code>, <code>concepts</code> e <code>images</code>, además de tablas puente para relaciones multivaluadas como libro-autor, libro-género y libro-concepto. La normalización parte de una estructura con listas repetidas, avanza por 1FN, 2FN y 3FN/BCNF, y llega a 4FN separando cada dependencia multivaluada independiente. Las claves primarias, foráneas, <code>UNIQUE</code>, <code>CHECK</code>, índices y la restricción de Administrador único deben implementarse en PostgreSQL.</p>
-<h2 id="parte-4-implementación-y-seguridad">Parte 4: Implementación y seguridad</h2>
-<p>La aplicación debe usar variables de entorno para secretos, hash seguro para contraseñas, consultas parametrizadas, validación server-side, autorización por rol, sesiones protegidas y mensajes de error controlados. Las imágenes deben aceptar únicamente JPG, PNG y WebP, validar MIME y tamaño, generar nombres seguros y almacenar metadatos sin exponer rutas internas.</p>
-<h2 id="parte-5-infraestructura-y-despliegue">Parte 5: Infraestructura y despliegue</h2>
-<p>Se documentará la creación de Compute Engine con GCP SDK CLI, la instalación de CentOS Stream 10 y PostgreSQL, la carga ordenada de scripts SQL y la configuración del reverse proxy. Node.js deberá probarse localmente en <code>http://127.0.0.1:3000/library</code> y publicarse mediante <code>http://IP_DEL_SERVIDOR/library</code>.</p>
-<h2 id="evidencias">Evidencias</h2>
-<p>Agrega <code>REQUIREMENTS.md</code>, <code>ENGINEERING_DECISIONS.md</code>, diagramas, scripts SQL, plan de pruebas, revisión de seguridad, capturas de PostgreSQL, autenticación, CRUD, uploads y acceso final mediante Apache o NGINX. No publiques <code>.env</code>, claves, tokens, contraseñas ni <code>node_modules</code>.</p>
+<h3 id="matriz-de-riesgos-de-seguridad-y-mitigaciones-arquitectónicas">Matriz de riesgos de seguridad y mitigaciones arquitectónicas</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#F97583">flowchart</span><span style="color:#B392F0"> TD</span></span>
+<span class="line"><span style="color:#F97583">    subgraph</span><span style="color:#FFAB70"> Amenazas</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Vectores de Amenaza Identificados"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#FFAB70">        T1</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"SQL Injection (SQLi)"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#FFAB70">        T2</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Autenticación rota y secuestro de sesión"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#FFAB70">        T3</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Carga de archivos maliciosos (RCE)"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#FFAB70">        T4</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Exposición de datos sensibles"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#F97583">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    subgraph</span><span style="color:#FFAB70"> Mitigaciones</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Contramedidas en la Arquitectura"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#FFAB70">        M1</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Consultas Parametrizadas obligatorias con driver 'pg'"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#FFAB70">        M2</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Cookies HttpOnly, SameSite Strict y Argon2id"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#FFAB70">        M3</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Validación binaria, UUIDv4 y uploads sin ejecución"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#FFAB70">        M4</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Variables de entorno y vistas EJS sanitizadas"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#F97583">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">    T1 </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> M1</span></span>
+<span class="line"><span style="color:#FFAB70">    T2 </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> M2</span></span>
+<span class="line"><span style="color:#FFAB70">    T3 </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> M3</span></span>
+<span class="line"><span style="color:#FFAB70">    T4 </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> M4</span></span></code></pre>
+<hr>
+<h2 id="parte-2-arquitectura-de-software-y-flujo-de-peticiones">Parte 2: Arquitectura de software y flujo de peticiones</h2>
+<p>La arquitectura adoptada sigue el patrón clásico de <strong>Arquitectura en Capas (Layered Architecture)</strong> embebida en un monolito modular. Esta separación garantiza alta mantenibilidad, facilita las pruebas unitarias y de integración, y delimita claramente el alcance de cada módulo de código:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#F97583">flowchart</span><span style="color:#B392F0"> TB</span></span>
+<span class="line"><span style="color:#FFAB70">    Client</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Navegador Web (Cliente)"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#F97583">    subgraph</span><span style="color:#B392F0"> ReverseProxy</span><span style="color:#E1E4E8">["</span><span style="color:#FFAB70">Proxy Inverso </span><span style="color:#F97583">(</span><span style="color:#9ECBFF">Servidor Perimetral</span><span style="color:#F97583">)</span><span style="color:#E1E4E8">"]</span></span>
+<span class="line"><span style="color:#FFAB70">        Proxy</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Apache / NGINX (/library)"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#F97583">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    subgraph</span><span style="color:#B392F0"> Monolith</span><span style="color:#E1E4E8">["</span><span style="color:#FFAB70">Unidad Desplegable Monolítica </span><span style="color:#F97583">(</span><span style="color:#9ECBFF">Node.js / Express en 127.0.0.1:3000</span><span style="color:#F97583">)</span><span style="color:#E1E4E8">"]</span></span>
+<span class="line"><span style="color:#FFAB70">        direction TB</span></span>
+<span class="line"><span style="color:#FFAB70">        Static</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Recursos Estáticos (public/)"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#FFAB70">        Router</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Rutas (routes/)"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#FFAB70">        MW</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Middlewares (Auth, Roles, Validaciones)"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#FFAB70">        Controllers</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Servicios / Controladores (Lógica de Negocio)"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#FFAB70">        Views</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Vistas (views/ - EJS Server-Side)"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#FFAB70">        DataAccess</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Acceso a Datos (pg / consultas parametrizadas)"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#F97583">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    subgraph</span><span style="color:#FFAB70"> Storage</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Almacenamiento y Persistencia"</span><span style="color:#F97583">]</span></span>
+<span class="line"><span style="color:#FFAB70">        Uploads</span><span style="color:#F97583">[(</span><span style="color:#9ECBFF">"Directorio uploads/ (Imágenes)"</span><span style="color:#F97583">)]</span></span>
+<span class="line"><span style="color:#FFAB70">        DB</span><span style="color:#F97583">[(</span><span style="color:#9ECBFF">"PostgreSQL Database"</span><span style="color:#F97583">)]</span></span>
+<span class="line"><span style="color:#F97583">    end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">    Client </span><span style="color:#F97583">--&gt;|</span><span style="color:#9ECBFF">HTTP /library</span><span style="color:#F97583">|</span><span style="color:#FFAB70"> Proxy</span></span>
+<span class="line"><span style="color:#FFAB70">    Proxy </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> Router</span></span>
+<span class="line"><span style="color:#FFAB70">    Proxy </span><span style="color:#F97583">-.-&gt;</span><span style="color:#FFAB70"> Static</span></span>
+<span class="line"><span style="color:#FFAB70">    Router </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> MW</span></span>
+<span class="line"><span style="color:#FFAB70">    MW </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> Controllers</span></span>
+<span class="line"><span style="color:#FFAB70">    Controllers </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> DataAccess</span></span>
+<span class="line"><span style="color:#FFAB70">    Controllers </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> Views</span></span>
+<span class="line"><span style="color:#FFAB70">    Controllers </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> Uploads</span></span>
+<span class="line"><span style="color:#FFAB70">    DataAccess </span><span style="color:#F97583">--&gt;</span><span style="color:#FFAB70"> DB</span></span>
+<span class="line"><span style="color:#FFAB70">    Views </span><span style="color:#F97583">--&gt;|</span><span style="color:#9ECBFF">HTML Renderizado</span><span style="color:#F97583">|</span><span style="color:#FFAB70"> Proxy</span></span>
+<span class="line"><span style="color:#FFAB70">    Proxy </span><span style="color:#F97583">--&gt;|</span><span style="color:#9ECBFF">Respuesta HTTP</span><span style="color:#F97583">|</span><span style="color:#FFAB70"> Client</span></span></code></pre>
+<h3 id="estructura-modular-del-proyecto">Estructura modular del proyecto</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>library-monolith/</span></span>
+<span class="line"><span>├── config/</span></span>
+<span class="line"><span>│   ├── database.js          # Pool de conexiones pg y configuración de parámetros</span></span>
+<span class="line"><span>│   └── session.js           # Almacenamiento y configuración segura de cookies de sesión</span></span>
+<span class="line"><span>├── controllers/</span></span>
+<span class="line"><span>│   ├── authController.js    # Lógica de flujo para login, registro y logout</span></span>
+<span class="line"><span>│   ├── bookController.js    # Coordinación de peticiones del catálogo y vistas de detalle</span></span>
+<span class="line"><span>│   └── adminController.js   # Acciones restringidas de edición, carga y eliminación</span></span>
+<span class="line"><span>├── middleware/</span></span>
+<span class="line"><span>│   ├── authenticate.js      # Verificación de sesión activa</span></span>
+<span class="line"><span>│   ├── authorize.js         # Validación de privilegios por rol (RBAC)</span></span>
+<span class="line"><span>│   ├── upload.js            # Interceptor Multer con filtrado de tipo de archivo</span></span>
+<span class="line"><span>│   └── errorHandler.js      # Captura global de excepciones con sanitización de trazas</span></span>
+<span class="line"><span>├── services/</span></span>
+<span class="line"><span>│   ├── bookService.js       # Reglas de negocio y orquestación de transacciones</span></span>
+<span class="line"><span>│   ├── authService.js       # Criptografía, validación de contraseñas y unicidad de Admin</span></span>
+<span class="line"><span>│   └── fileService.js       # Manejo físico de imágenes en sistema de archivos</span></span>
+<span class="line"><span>├── routes/</span></span>
+<span class="line"><span>│   ├── authRoutes.js        # /library/auth/*</span></span>
+<span class="line"><span>│   ├── bookRoutes.js        # /library/books/*</span></span>
+<span class="line"><span>│   └── adminRoutes.js       # /library/admin/*</span></span>
+<span class="line"><span>├── views/</span></span>
+<span class="line"><span>│   ├── layouts/</span></span>
+<span class="line"><span>│   │   └── main.ejs         # Plantilla maestra con navbar, footer y alerts</span></span>
+<span class="line"><span>│   ├── books/</span></span>
+<span class="line"><span>│   │   ├── index.ejs        # Galería del catálogo con buscador y filtros</span></span>
+<span class="line"><span>│   │   └── detail.ejs       # Ficha técnica completa del libro e imágenes asociadas</span></span>
+<span class="line"><span>│   └── admin/</span></span>
+<span class="line"><span>│       ├── form.ejs         # Formulario de alta/edición de libros con multiselect</span></span>
+<span class="line"><span>│       └── dashboard.ejs    # Consola de administración</span></span>
+<span class="line"><span>├── public/</span></span>
+<span class="line"><span>│   ├── css/                 # Hojas de estilo estáticas</span></span>
+<span class="line"><span>│   └── js/                  # Scripts cliente auxiliares</span></span>
+<span class="line"><span>├── uploads/                 # Directorio aislado para almacenamiento de imágenes</span></span>
+<span class="line"><span>├── scripts/</span></span>
+<span class="line"><span>│   ├── schema.sql           # Definición de DDL, índices y triggers de 4FN</span></span>
+<span class="line"><span>│   └── seed.sql             # Datos iniciales para pruebas reproducibles</span></span>
+<span class="line"><span>├── .env.example             # Plantilla de variables de entorno (sin credenciales)</span></span>
+<span class="line"><span>├── app.js                   # Inicialización de la aplicación Express y middlewares</span></span>
+<span class="line"><span>└── package.json             # Dependencias del proyecto</span></span></code></pre>
+<hr>
+<h2 id="parte-3-diseño-de-datos-y-proceso-formal-de-normalización-hasta-4fn">Parte 3: Diseño de datos y proceso formal de normalización hasta 4FN</h2>
+<p>El modelado relacional parte del análisis de una estructura desnormalizada inicial (con atributos multivaluados y redundancia de catálogo) y se somete a un riguroso proceso de normalización matemática:</p>
+<h3 id="1-estado-inicial-no-normalizado---0fn">1. Estado Inicial (No Normalizado - 0FN)</h3>
+<p>Una tupla típica contiene campos repetitivos y multivaluados como:<br>
+$$\text{Libro}(ISBN, \text{Título}, \text{Precio}, \text{Autores}, \text{Géneros}, \text{Conceptos}, \text{Editorial}, \text{Imágenes})$$</p>
+<h3 id="2-primera-forma-normal-1fn">2. Primera Forma Normal (1FN)</h3>
+<ul>
+<li><strong>Condición</strong>: Atomicidad de los valores en cada columna; eliminación de grupos repetitivos y arreglos embebidos.</li>
+<li><strong>Acción</strong>: Se extraen los autores, géneros, imágenes y conceptos a entidades independientes con identificadores propios ($ID$).</li>
+</ul>
+<h3 id="3-segunda-forma-normal-2fn">3. Segunda Forma Normal (2FN)</h3>
+<ul>
+<li><strong>Condición</strong>: Cumplir 1FN y garantizar que todos los atributos no clave dependan funcionalmente de la totalidad de la clave primaria (eliminación de dependencias parciales en claves compuestas).</li>
+<li><strong>Acción</strong>: Los atributos descriptivos de autor (como nacionalidad) y género pertenecen a tablas maestras independientes (<code>authors</code>, <code>genres</code>) y no a la tabla puente del libro.</li>
+</ul>
+<h3 id="4-tercera-forma-normal-3fn--bcnf">4. Tercera Forma Normal (3FN / BCNF)</h3>
+<ul>
+<li><strong>Condición</strong>: Cumplir 2FN y eliminar dependencias transitivas ($X \rightarrow Y \rightarrow Z$).</li>
+<li><strong>Acción</strong>: Los formatos, categorías y editoriales se extraen a tablas de catálogo normalizadas, relacionándose con <code>books</code> mediante llaves foráneas directas (<code>format_id</code>, <code>category_id</code>).</li>
+</ul>
+<h3 id="5-cuarta-forma-normal-4fn">5. Cuarta Forma Normal (4FN)</h3>
+<ul>
+<li><strong>Condición</strong>: Cumplir BCNF y garantizar que no existan <strong>Dependencias Multivaluadas Independientes (MVD)</strong> no triviales ($A \twoheadrightarrow B$ y $A \twoheadrightarrow C$ con $B$ y $C$ independientes).</li>
+<li><strong>Justificación</strong>: Un libro puede tener múltiples autores independientes de sus múltiples géneros e independientes de sus múltiples conceptos temáticos. Mantenerlos en una sola tabla combinada generaría una anomalía de producto cartesiano ($N \times M \times P$ registros redundantes).</li>
+<li><strong>Acción</strong>: Se crean tablas intermedias binarias y desacopladas:
+<ul>
+<li><code>book_authors(book_id, author_id)</code></li>
+<li><code>book_genres(book_id, genre_id)</code></li>
+<li><code>book_concepts(book_id, concept_id)</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="diagrama-entidad-relación-4fn">Diagrama Entidad-Relación (4FN)</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#F97583">erDiagram</span></span>
+<span class="line"><span style="color:#FFAB70">    USERS</span><span style="color:#F97583"> ||--o{</span><span style="color:#FFAB70"> SESSIONS</span><span style="color:#F97583"> :</span><span style="color:#9ECBFF"> maintains</span></span>
+<span class="line"><span style="color:#FFAB70">    BOOKS</span><span style="color:#F97583"> ||--|{</span><span style="color:#FFAB70"> BOOK_AUTHORS</span><span style="color:#F97583"> :</span><span style="color:#9ECBFF"> has</span></span>
+<span class="line"><span style="color:#FFAB70">    AUTHORS</span><span style="color:#F97583"> ||--|{</span><span style="color:#FFAB70"> BOOK_AUTHORS</span><span style="color:#F97583"> :</span><span style="color:#9ECBFF"> participates</span></span>
+<span class="line"><span style="color:#FFAB70">    BOOKS</span><span style="color:#F97583"> ||--|{</span><span style="color:#FFAB70"> BOOK_GENRES</span><span style="color:#F97583"> :</span><span style="color:#9ECBFF"> categorized_as</span></span>
+<span class="line"><span style="color:#FFAB70">    GENRES</span><span style="color:#F97583"> ||--|{</span><span style="color:#FFAB70"> BOOK_GENRES</span><span style="color:#F97583"> :</span><span style="color:#9ECBFF"> belongs_to</span></span>
+<span class="line"><span style="color:#FFAB70">    BOOKS</span><span style="color:#F97583"> ||--|{</span><span style="color:#FFAB70"> BOOK_CONCEPTS</span><span style="color:#F97583"> :</span><span style="color:#9ECBFF"> tagged_with</span></span>
+<span class="line"><span style="color:#FFAB70">    CONCEPTS</span><span style="color:#F97583"> ||--|{</span><span style="color:#FFAB70"> BOOK_CONCEPTS</span><span style="color:#F97583"> :</span><span style="color:#9ECBFF"> applies_to</span></span>
+<span class="line"><span style="color:#FFAB70">    BOOKS</span><span style="color:#F97583"> ||--o{</span><span style="color:#FFAB70"> BOOK_IMAGES</span><span style="color:#F97583"> :</span><span style="color:#9ECBFF"> contains</span></span>
+<span class="line"><span style="color:#FFAB70">    CATEGORIES</span><span style="color:#F97583"> ||--o{</span><span style="color:#FFAB70"> BOOKS</span><span style="color:#F97583"> :</span><span style="color:#9ECBFF"> classifies</span></span>
+<span class="line"><span style="color:#FFAB70">    FORMATS</span><span style="color:#F97583"> ||--o{</span><span style="color:#FFAB70"> BOOKS</span><span style="color:#F97583"> :</span><span style="color:#9ECBFF"> formats</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">    SESSIONS</span><span style="color:#F97583"> {</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> id</span><span style="color:#F97583"> PK</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> user_id</span><span style="color:#F97583"> FK</span></span>
+<span class="line"><span style="color:#F97583">        timestamp</span><span style="color:#FFAB70"> expires_at</span></span>
+<span class="line"><span style="color:#F97583">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">    USERS</span><span style="color:#F97583"> {</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> id</span><span style="color:#F97583"> PK</span></span>
+<span class="line"><span style="color:#F97583">        varchar</span><span style="color:#FFAB70"> email</span><span style="color:#F97583"> UK</span></span>
+<span class="line"><span style="color:#F97583">        varchar</span><span style="color:#FFAB70"> password_hash</span></span>
+<span class="line"><span style="color:#F97583">        varchar</span><span style="color:#FFAB70"> role_name</span></span>
+<span class="line"><span style="color:#F97583">        timestamp</span><span style="color:#FFAB70"> created_at</span></span>
+<span class="line"><span style="color:#F97583">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">    BOOKS</span><span style="color:#F97583"> {</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> id</span><span style="color:#F97583"> PK</span></span>
+<span class="line"><span style="color:#F97583">        varchar</span><span style="color:#FFAB70"> isbn</span><span style="color:#F97583"> UK</span></span>
+<span class="line"><span style="color:#F97583">        varchar</span><span style="color:#FFAB70"> title</span></span>
+<span class="line"><span style="color:#F97583">        numeric</span><span style="color:#FFAB70"> price</span></span>
+<span class="line"><span style="color:#F97583">        integer</span><span style="color:#FFAB70"> stock</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> category_id</span><span style="color:#F97583"> FK</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> format_id</span><span style="color:#F97583"> FK</span></span>
+<span class="line"><span style="color:#F97583">        text</span><span style="color:#FFAB70"> synopsis</span></span>
+<span class="line"><span style="color:#F97583">        timestamp</span><span style="color:#FFAB70"> updated_at</span></span>
+<span class="line"><span style="color:#F97583">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">    AUTHORS</span><span style="color:#F97583"> {</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> id</span><span style="color:#F97583"> PK</span></span>
+<span class="line"><span style="color:#F97583">        varchar</span><span style="color:#FFAB70"> full_name</span></span>
+<span class="line"><span style="color:#F97583">        varchar</span><span style="color:#FFAB70"> country</span></span>
+<span class="line"><span style="color:#F97583">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">    GENRES</span><span style="color:#F97583"> {</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> id</span><span style="color:#F97583"> PK</span></span>
+<span class="line"><span style="color:#F97583">        varchar</span><span style="color:#FFAB70"> name</span><span style="color:#F97583"> UK</span></span>
+<span class="line"><span style="color:#F97583">        text</span><span style="color:#FFAB70"> description</span></span>
+<span class="line"><span style="color:#F97583">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">    CONCEPTS</span><span style="color:#F97583"> {</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> id</span><span style="color:#F97583"> PK</span></span>
+<span class="line"><span style="color:#F97583">        varchar</span><span style="color:#FFAB70"> tag_name</span><span style="color:#F97583"> UK</span></span>
+<span class="line"><span style="color:#F97583">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">    BOOK_AUTHORS</span><span style="color:#F97583"> {</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> book_id</span><span style="color:#F97583"> PK,FK</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> author_id</span><span style="color:#F97583"> PK,FK</span></span>
+<span class="line"><span style="color:#F97583">        integer</span><span style="color:#FFAB70"> author_order</span></span>
+<span class="line"><span style="color:#F97583">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">    BOOK_GENRES</span><span style="color:#F97583"> {</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> book_id</span><span style="color:#F97583"> PK,FK</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> genre_id</span><span style="color:#F97583"> PK,FK</span></span>
+<span class="line"><span style="color:#F97583">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">    BOOK_CONCEPTS</span><span style="color:#F97583"> {</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> book_id</span><span style="color:#F97583"> PK,FK</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> concept_id</span><span style="color:#F97583"> PK,FK</span></span>
+<span class="line"><span style="color:#F97583">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">    BOOK_IMAGES</span><span style="color:#F97583"> {</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> id</span><span style="color:#F97583"> PK</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> book_id</span><span style="color:#F97583"> FK</span></span>
+<span class="line"><span style="color:#F97583">        varchar</span><span style="color:#FFAB70"> file_name</span></span>
+<span class="line"><span style="color:#F97583">        varchar</span><span style="color:#FFAB70"> original_name</span></span>
+<span class="line"><span style="color:#F97583">        varchar</span><span style="color:#FFAB70"> mime_type</span></span>
+<span class="line"><span style="color:#F97583">        integer</span><span style="color:#FFAB70"> file_size</span></span>
+<span class="line"><span style="color:#F97583">        boolean</span><span style="color:#FFAB70"> is_cover</span></span>
+<span class="line"><span style="color:#F97583">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">    CATEGORIES</span><span style="color:#F97583"> {</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> id</span><span style="color:#F97583"> PK</span></span>
+<span class="line"><span style="color:#F97583">        varchar</span><span style="color:#FFAB70"> name</span><span style="color:#F97583"> UK</span></span>
+<span class="line"><span style="color:#F97583">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#FFAB70">    FORMATS</span><span style="color:#F97583"> {</span></span>
+<span class="line"><span style="color:#F97583">        uuid</span><span style="color:#FFAB70"> id</span><span style="color:#F97583"> PK</span></span>
+<span class="line"><span style="color:#F97583">        varchar</span><span style="color:#FFAB70"> name</span><span style="color:#F97583"> UK</span></span>
+<span class="line"><span style="color:#F97583">    }</span></span></code></pre>
+<h3 id="implementación-del-ddl-y-restricción-de-administrador-único">Implementación del DDL y Restricción de Administrador Único</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="sql"><code><span class="line"><span style="color:#6A737D">-- Habilitar extensión para UUIDs criptográficos</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#E1E4E8"> EXTENSION </span><span style="color:#F97583">IF</span><span style="color:#F97583"> NOT</span><span style="color:#F97583"> EXISTS</span><span style="color:#9ECBFF"> "pgcrypto"</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">-- Tabla de Usuarios con control de rol</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> users</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    id UUID </span><span style="color:#F97583">PRIMARY KEY</span><span style="color:#F97583"> DEFAULT</span><span style="color:#E1E4E8"> gen_random_uuid(),</span></span>
+<span class="line"><span style="color:#E1E4E8">    email </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">255</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">UNIQUE</span><span style="color:#F97583"> NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    password_hash </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">255</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    role_name </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">20</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">NOT NULL</span><span style="color:#F97583"> DEFAULT</span><span style="color:#9ECBFF"> 'USER'</span><span style="color:#F97583"> CHECK</span><span style="color:#E1E4E8"> (role_name </span><span style="color:#F97583">IN</span><span style="color:#E1E4E8"> (</span><span style="color:#9ECBFF">'USER'</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">'ADMIN'</span><span style="color:#E1E4E8">)),</span></span>
+<span class="line"><span style="color:#E1E4E8">    created_at </span><span style="color:#F97583">TIMESTAMPTZ</span><span style="color:#F97583"> DEFAULT</span><span style="color:#E1E4E8"> CURRENT_TIMESTAMP</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">-- Restricción estricta para garantizar un ÚNICO Administrador en todo el sistema</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> UNIQUE INDEX</span><span style="color:#B392F0"> unique_single_admin_idx</span><span style="color:#F97583"> ON</span><span style="color:#E1E4E8"> users (role_name) </span><span style="color:#F97583">WHERE</span><span style="color:#E1E4E8"> (role_name </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> 'ADMIN'</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">-- Catálogos normalizados</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> categories</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    id UUID </span><span style="color:#F97583">PRIMARY KEY</span><span style="color:#F97583"> DEFAULT</span><span style="color:#E1E4E8"> gen_random_uuid(),</span></span>
+<span class="line"><span style="color:#F97583">    name</span><span style="color:#F97583"> VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">100</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">UNIQUE</span><span style="color:#F97583"> NOT NULL</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> formats</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    id UUID </span><span style="color:#F97583">PRIMARY KEY</span><span style="color:#F97583"> DEFAULT</span><span style="color:#E1E4E8"> gen_random_uuid(),</span></span>
+<span class="line"><span style="color:#F97583">    name</span><span style="color:#F97583"> VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">50</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">UNIQUE</span><span style="color:#F97583"> NOT NULL</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> authors</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    id UUID </span><span style="color:#F97583">PRIMARY KEY</span><span style="color:#F97583"> DEFAULT</span><span style="color:#E1E4E8"> gen_random_uuid(),</span></span>
+<span class="line"><span style="color:#E1E4E8">    full_name </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">200</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    country </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">100</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> genres</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    id UUID </span><span style="color:#F97583">PRIMARY KEY</span><span style="color:#F97583"> DEFAULT</span><span style="color:#E1E4E8"> gen_random_uuid(),</span></span>
+<span class="line"><span style="color:#F97583">    name</span><span style="color:#F97583"> VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">100</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">UNIQUE</span><span style="color:#F97583"> NOT NULL</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> concepts</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    id UUID </span><span style="color:#F97583">PRIMARY KEY</span><span style="color:#F97583"> DEFAULT</span><span style="color:#E1E4E8"> gen_random_uuid(),</span></span>
+<span class="line"><span style="color:#E1E4E8">    tag_name </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">100</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">UNIQUE</span><span style="color:#F97583"> NOT NULL</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">-- Tabla Principal de Libros (3FN/4FN)</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> books</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    id UUID </span><span style="color:#F97583">PRIMARY KEY</span><span style="color:#F97583"> DEFAULT</span><span style="color:#E1E4E8"> gen_random_uuid(),</span></span>
+<span class="line"><span style="color:#E1E4E8">    isbn </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">17</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">UNIQUE</span><span style="color:#F97583"> NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    title </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">300</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    price </span><span style="color:#F97583">NUMERIC</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">2</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">NOT NULL</span><span style="color:#F97583"> CHECK</span><span style="color:#E1E4E8"> (price </span><span style="color:#F97583">&gt;=</span><span style="color:#79B8FF"> 0</span><span style="color:#E1E4E8">.</span><span style="color:#79B8FF">00</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#E1E4E8">    stock </span><span style="color:#F97583">INTEGER</span><span style="color:#F97583"> NOT NULL</span><span style="color:#F97583"> DEFAULT</span><span style="color:#79B8FF"> 0</span><span style="color:#F97583"> CHECK</span><span style="color:#E1E4E8"> (stock </span><span style="color:#F97583">&gt;=</span><span style="color:#79B8FF"> 0</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#E1E4E8">    category_id UUID </span><span style="color:#F97583">REFERENCES</span><span style="color:#E1E4E8"> categories(id) </span><span style="color:#F97583">ON DELETE</span><span style="color:#E1E4E8"> RESTRICT,</span></span>
+<span class="line"><span style="color:#E1E4E8">    format_id UUID </span><span style="color:#F97583">REFERENCES</span><span style="color:#E1E4E8"> formats(id) </span><span style="color:#F97583">ON DELETE</span><span style="color:#E1E4E8"> RESTRICT,</span></span>
+<span class="line"><span style="color:#E1E4E8">    synopsis </span><span style="color:#F97583">TEXT</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    created_at </span><span style="color:#F97583">TIMESTAMPTZ</span><span style="color:#F97583"> DEFAULT</span><span style="color:#E1E4E8"> CURRENT_TIMESTAMP</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">-- Tablas puente para 4FN (Eliminación de dependencias multivaluadas)</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> book_authors</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    book_id UUID </span><span style="color:#F97583">REFERENCES</span><span style="color:#E1E4E8"> books(id) </span><span style="color:#F97583">ON DELETE CASCADE</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    author_id UUID </span><span style="color:#F97583">REFERENCES</span><span style="color:#E1E4E8"> authors(id) </span><span style="color:#F97583">ON DELETE</span><span style="color:#E1E4E8"> RESTRICT,</span></span>
+<span class="line"><span style="color:#E1E4E8">    author_order </span><span style="color:#F97583">SMALLINT</span><span style="color:#F97583"> DEFAULT</span><span style="color:#79B8FF"> 1</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#F97583">    PRIMARY KEY</span><span style="color:#E1E4E8"> (book_id, author_id)</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> book_genres</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    book_id UUID </span><span style="color:#F97583">REFERENCES</span><span style="color:#E1E4E8"> books(id) </span><span style="color:#F97583">ON DELETE CASCADE</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    genre_id UUID </span><span style="color:#F97583">REFERENCES</span><span style="color:#E1E4E8"> genres(id) </span><span style="color:#F97583">ON DELETE</span><span style="color:#E1E4E8"> RESTRICT,</span></span>
+<span class="line"><span style="color:#F97583">    PRIMARY KEY</span><span style="color:#E1E4E8"> (book_id, genre_id)</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> book_concepts</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    book_id UUID </span><span style="color:#F97583">REFERENCES</span><span style="color:#E1E4E8"> books(id) </span><span style="color:#F97583">ON DELETE CASCADE</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    concept_id UUID </span><span style="color:#F97583">REFERENCES</span><span style="color:#E1E4E8"> concepts(id) </span><span style="color:#F97583">ON DELETE</span><span style="color:#E1E4E8"> RESTRICT,</span></span>
+<span class="line"><span style="color:#F97583">    PRIMARY KEY</span><span style="color:#E1E4E8"> (book_id, concept_id)</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">-- Gestión de Recursos Multimedia (Imágenes)</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> book_images</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    id UUID </span><span style="color:#F97583">PRIMARY KEY</span><span style="color:#F97583"> DEFAULT</span><span style="color:#E1E4E8"> gen_random_uuid(),</span></span>
+<span class="line"><span style="color:#E1E4E8">    book_id UUID </span><span style="color:#F97583">REFERENCES</span><span style="color:#E1E4E8"> books(id) </span><span style="color:#F97583">ON DELETE CASCADE</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    file_name </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">255</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    original_name </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">255</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    mime_type </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">50</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">NOT NULL</span><span style="color:#F97583"> CHECK</span><span style="color:#E1E4E8"> (mime_type </span><span style="color:#F97583">IN</span><span style="color:#E1E4E8"> (</span><span style="color:#9ECBFF">'image/jpeg'</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">'image/png'</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">'image/webp'</span><span style="color:#E1E4E8">)),</span></span>
+<span class="line"><span style="color:#E1E4E8">    file_size </span><span style="color:#F97583">INTEGER</span><span style="color:#F97583"> NOT NULL</span><span style="color:#F97583"> CHECK</span><span style="color:#E1E4E8"> (file_size </span><span style="color:#F97583">&lt;=</span><span style="color:#79B8FF"> 2097152</span><span style="color:#E1E4E8">), </span><span style="color:#6A737D">-- Máximo 2MB</span></span>
+<span class="line"><span style="color:#E1E4E8">    is_cover </span><span style="color:#F97583">BOOLEAN</span><span style="color:#F97583"> DEFAULT</span><span style="color:#E1E4E8"> FALSE,</span></span>
+<span class="line"><span style="color:#E1E4E8">    created_at </span><span style="color:#F97583">TIMESTAMPTZ</span><span style="color:#F97583"> DEFAULT</span><span style="color:#E1E4E8"> CURRENT_TIMESTAMP</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">-- Índices B-Tree para optimización de consultas de catálogo</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> INDEX</span><span style="color:#B392F0"> idx_books_isbn</span><span style="color:#F97583"> ON</span><span style="color:#E1E4E8"> books(isbn);</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> INDEX</span><span style="color:#B392F0"> idx_books_title</span><span style="color:#F97583"> ON</span><span style="color:#E1E4E8"> books </span><span style="color:#F97583">USING</span><span style="color:#E1E4E8"> gin(to_tsvector(</span><span style="color:#9ECBFF">'spanish'</span><span style="color:#E1E4E8">, title));</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> INDEX</span><span style="color:#B392F0"> idx_book_images_cover</span><span style="color:#F97583"> ON</span><span style="color:#E1E4E8"> book_images(book_id) </span><span style="color:#F97583">WHERE</span><span style="color:#E1E4E8"> (is_cover </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> TRUE);</span></span></code></pre>
+<hr>
+<h2 id="parte-4-implementación-seguridad-y-buenas-prácticas">Parte 4: Implementación, seguridad y buenas prácticas</h2>
+<h3 id="1-gestión-atómica-y-transaccional-del-crud">1. Gestión atómica y transaccional del CRUD</h3>
+<p>Cuando se registra o edita un libro, la inserción del registro principal y sus tablas intermedias (autores, géneros, conceptos e imágenes) debe ocurrir dentro de una <strong>transacción ACID</strong> en PostgreSQL. Si alguna asociación falla, se ejecuta un <code>ROLLBACK</code> completo para evitar registros huérfanos.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="javascript"><code><span class="line"><span style="color:#6A737D">// Ejemplo de inserción transaccional segura en services/bookService.js</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> { pool } </span><span style="color:#F97583">from</span><span style="color:#9ECBFF"> '../config/database.js'</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">export</span><span style="color:#F97583"> async</span><span style="color:#F97583"> function</span><span style="color:#B392F0"> createBookWithRelations</span><span style="color:#E1E4E8">(</span><span style="color:#FFAB70">bookData</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">authorIds</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">genreIds</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">conceptIds</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">files</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#F97583">  const</span><span style="color:#79B8FF"> client</span><span style="color:#F97583"> =</span><span style="color:#F97583"> await</span><span style="color:#E1E4E8"> pool.</span><span style="color:#B392F0">connect</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#F97583">  try</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    await</span><span style="color:#E1E4E8"> client.</span><span style="color:#B392F0">query</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">'BEGIN'</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    // 1. Insertar libro con parámetros posicionales ($1, $2...)</span></span>
+<span class="line"><span style="color:#F97583">    const</span><span style="color:#79B8FF"> insertBookSql</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> `</span></span>
+<span class="line"><span style="color:#9ECBFF">      INSERT INTO books (isbn, title, price, stock, category_id, format_id, synopsis)</span></span>
+<span class="line"><span style="color:#9ECBFF">      VALUES ($1, $2, $3, $4, $5, $6, $7)</span></span>
+<span class="line"><span style="color:#9ECBFF">      RETURNING id;</span></span>
+<span class="line"><span style="color:#9ECBFF">    `</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">    const</span><span style="color:#79B8FF"> bookRes</span><span style="color:#F97583"> =</span><span style="color:#F97583"> await</span><span style="color:#E1E4E8"> client.</span><span style="color:#B392F0">query</span><span style="color:#E1E4E8">(insertBookSql, [</span></span>
+<span class="line"><span style="color:#E1E4E8">      bookData.isbn,</span></span>
+<span class="line"><span style="color:#E1E4E8">      bookData.title,</span></span>
+<span class="line"><span style="color:#E1E4E8">      bookData.price,</span></span>
+<span class="line"><span style="color:#E1E4E8">      bookData.stock,</span></span>
+<span class="line"><span style="color:#E1E4E8">      bookData.categoryId,</span></span>
+<span class="line"><span style="color:#E1E4E8">      bookData.formatId,</span></span>
+<span class="line"><span style="color:#E1E4E8">      bookData.synopsis</span></span>
+<span class="line"><span style="color:#E1E4E8">    ]);</span></span>
+<span class="line"><span style="color:#F97583">    const</span><span style="color:#79B8FF"> bookId</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> bookRes.rows[</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">].id;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    // 2. Asociar autores</span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> (</span><span style="color:#F97583">const</span><span style="color:#79B8FF"> authorId</span><span style="color:#F97583"> of</span><span style="color:#E1E4E8"> authorIds) {</span></span>
+<span class="line"><span style="color:#F97583">      await</span><span style="color:#E1E4E8"> client.</span><span style="color:#B392F0">query</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#9ECBFF">        'INSERT INTO book_authors (book_id, author_id) VALUES ($1, $2);'</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">        [bookId, authorId]</span></span>
+<span class="line"><span style="color:#E1E4E8">      );</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    // 3. Asociar géneros</span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> (</span><span style="color:#F97583">const</span><span style="color:#79B8FF"> genreId</span><span style="color:#F97583"> of</span><span style="color:#E1E4E8"> genreIds) {</span></span>
+<span class="line"><span style="color:#F97583">      await</span><span style="color:#E1E4E8"> client.</span><span style="color:#B392F0">query</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#9ECBFF">        'INSERT INTO book_genres (book_id, genre_id) VALUES ($1, $2);'</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">        [bookId, genreId]</span></span>
+<span class="line"><span style="color:#E1E4E8">      );</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    // 4. Asociar conceptos temáticos</span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> (</span><span style="color:#F97583">const</span><span style="color:#79B8FF"> conceptId</span><span style="color:#F97583"> of</span><span style="color:#E1E4E8"> conceptIds) {</span></span>
+<span class="line"><span style="color:#F97583">      await</span><span style="color:#E1E4E8"> client.</span><span style="color:#B392F0">query</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#9ECBFF">        'INSERT INTO book_concepts (book_id, concept_id) VALUES ($1, $2);'</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">        [bookId, conceptId]</span></span>
+<span class="line"><span style="color:#E1E4E8">      );</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    // 5. Registrar metadatos de imágenes si fueron cargadas</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> (files </span><span style="color:#F97583">&amp;&amp;</span><span style="color:#E1E4E8"> files.</span><span style="color:#79B8FF">length</span><span style="color:#F97583"> &gt;</span><span style="color:#79B8FF"> 0</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#F97583">      for</span><span style="color:#E1E4E8"> (</span><span style="color:#F97583">const</span><span style="color:#79B8FF"> file</span><span style="color:#F97583"> of</span><span style="color:#E1E4E8"> files) {</span></span>
+<span class="line"><span style="color:#F97583">        await</span><span style="color:#E1E4E8"> client.</span><span style="color:#B392F0">query</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#9ECBFF">          `INSERT INTO book_images (book_id, file_name, original_name, mime_type, file_size, is_cover)</span></span>
+<span class="line"><span style="color:#9ECBFF">           VALUES ($1, $2, $3, $4, $5, $6);`</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">          [bookId, file.filename, file.originalname, file.mimetype, file.size, file.isCover </span><span style="color:#F97583">||</span><span style="color:#79B8FF"> false</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#E1E4E8">        );</span></span>
+<span class="line"><span style="color:#E1E4E8">      }</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    await</span><span style="color:#E1E4E8"> client.</span><span style="color:#B392F0">query</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">'COMMIT'</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> bookId;</span></span>
+<span class="line"><span style="color:#E1E4E8">  } </span><span style="color:#F97583">catch</span><span style="color:#E1E4E8"> (error) {</span></span>
+<span class="line"><span style="color:#F97583">    await</span><span style="color:#E1E4E8"> client.</span><span style="color:#B392F0">query</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">'ROLLBACK'</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#F97583">    throw</span><span style="color:#E1E4E8"> error;</span></span>
+<span class="line"><span style="color:#E1E4E8">  } </span><span style="color:#F97583">finally</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">    client.</span><span style="color:#B392F0">release</span><span style="color:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<h3 id="2-tratamiento-seguro-de-subida-de-imágenes">2. Tratamiento seguro de subida de imágenes</h3>
+<ul>
+<li><strong>Validación de tipo binario</strong>: Se evita la inspección superficial por extensión <code>.jpg</code>. El middleware <code>multer</code> valida la cabecera del archivo y el tipo MIME detectado.</li>
+<li><strong>Almacenamiento por UUID</strong>: Los archivos nunca se guardan con el nombre provisto por el usuario para impedir ataques de <em>Path Traversal</em> (<code>../../etc/passwd</code>).</li>
+<li><strong>Directorio fuera del alcance de ejecución</strong>: La carpeta <code>/uploads</code> se sirve únicamente como recurso binario estático sin permisos de ejecución de scripts en el servidor web.</li>
+</ul>
+<hr>
+<h2 id="parte-5-infraestructura-despliegue-y-configuración-en-gcp">Parte 5: Infraestructura, despliegue y configuración en GCP</h2>
+<p>El aprovisionamiento de la infraestructura en Google Cloud Platform se realiza mediante scripts reproducibles utilizando la herramienta de línea de comandos <code>gcloud CLI</code>.</p>
+<h3 id="1-aprovisionamiento-de-la-vm-con-gcp-sdk">1. Aprovisionamiento de la VM con GCP SDK</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># 1. Autenticación y configuración del proyecto</span></span>
+<span class="line"><span style="color:#B392F0">gcloud</span><span style="color:#9ECBFF"> auth</span><span style="color:#9ECBFF"> login</span></span>
+<span class="line"><span style="color:#B392F0">gcloud</span><span style="color:#9ECBFF"> config</span><span style="color:#9ECBFF"> set</span><span style="color:#9ECBFF"> project</span><span style="color:#9ECBFF"> iac-portal-academico</span></span>
+<span class="line"><span style="color:#B392F0">gcloud</span><span style="color:#9ECBFF"> config</span><span style="color:#9ECBFF"> set</span><span style="color:#9ECBFF"> compute/region</span><span style="color:#9ECBFF"> us-central1</span></span>
+<span class="line"><span style="color:#B392F0">gcloud</span><span style="color:#9ECBFF"> config</span><span style="color:#9ECBFF"> set</span><span style="color:#9ECBFF"> compute/zone</span><span style="color:#9ECBFF"> us-central1-a</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># 2. Creación de la instancia Compute Engine con CentOS Stream 10</span></span>
+<span class="line"><span style="color:#B392F0">gcloud</span><span style="color:#9ECBFF"> compute</span><span style="color:#9ECBFF"> instances</span><span style="color:#9ECBFF"> create</span><span style="color:#9ECBFF"> vm-library-monolith</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">    --image-family=centos-stream-10</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">    --image-project=centos-stream-release</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">    --machine-type=e2-standard-2</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">    --boot-disk-size=30GB</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">    --tags=http-server,https-server</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">    --metadata=startup-script=</span><span style="color:#9ECBFF">'#!/bin/bash</span></span>
+<span class="line"><span style="color:#9ECBFF">    dnf -y update</span></span>
+<span class="line"><span style="color:#9ECBFF">    dnf -y module enable nodejs:22</span></span>
+<span class="line"><span style="color:#9ECBFF">    dnf -y install nodejs postgresql-server postgresql-contrib nginx git'</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># 3. Creación de reglas de Firewall para acceso público HTTP/HTTPS</span></span>
+<span class="line"><span style="color:#B392F0">gcloud</span><span style="color:#9ECBFF"> compute</span><span style="color:#9ECBFF"> firewall-rules</span><span style="color:#9ECBFF"> create</span><span style="color:#9ECBFF"> allow-http-https</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">    --direction=INGRESS</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">    --priority=1000</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">    --network=default</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">    --action=ALLOW</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">    --rules=tcp:80,tcp:443</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">    --source-ranges=0.0.0.0/0</span><span style="color:#79B8FF"> \</span></span>
+<span class="line"><span style="color:#79B8FF">    --target-tags=http-server,https-server</span></span></code></pre>
+<h3 id="2-configuración-de-postgresql-en-centos-stream-10">2. Configuración de PostgreSQL en CentOS Stream 10</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#6A737D"># Inicializar y habilitar PostgreSQL</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> postgresql-setup</span><span style="color:#79B8FF"> --initdb</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> systemctl</span><span style="color:#9ECBFF"> enable</span><span style="color:#79B8FF"> --now</span><span style="color:#9ECBFF"> postgresql</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Crear base de datos y usuario restringido</span></span>
+<span class="line"><span style="color:#B392F0">sudo</span><span style="color:#79B8FF"> -u</span><span style="color:#9ECBFF"> postgres</span><span style="color:#9ECBFF"> psql</span><span style="color:#F97583"> &lt;&lt;</span><span style="color:#9ECBFF">EOF</span></span>
+<span class="line"><span style="color:#9ECBFF">CREATE DATABASE library_db;</span></span>
+<span class="line"><span style="color:#9ECBFF">CREATE USER library_user WITH ENCRYPTED PASSWORD 'ContraseñaSegura_123!';</span></span>
+<span class="line"><span style="color:#9ECBFF">GRANT ALL PRIVILEGES ON DATABASE library_db TO library_user;</span></span>
+<span class="line"><span style="color:#9ECBFF">\c library_db</span></span>
+<span class="line"><span style="color:#9ECBFF">GRANT ALL ON SCHEMA public TO library_user;</span></span>
+<span class="line"><span style="color:#9ECBFF">EOF</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Ejecutar script DDL</span></span>
+<span class="line"><span style="color:#B392F0">psql</span><span style="color:#79B8FF"> -U</span><span style="color:#9ECBFF"> library_user</span><span style="color:#79B8FF"> -d</span><span style="color:#9ECBFF"> library_db</span><span style="color:#79B8FF"> -h</span><span style="color:#79B8FF"> 127.0.0.1</span><span style="color:#79B8FF"> -f</span><span style="color:#9ECBFF"> ./scripts/schema.sql</span></span></code></pre>
+<h3 id="3-configuración-del-proxy-inverso-nginx--apache">3. Configuración del Proxy Inverso (NGINX / Apache)</h3>
+<p>Para cumplir la restricción de que Node.js escuche únicamente en <code>127.0.0.1:3000</code> bajo el prefijo <code>/library</code>:</p>
+<h4 id="configuración-de-nginx-etcnginxconfdlibraryconf">Configuración de NGINX (<code>/etc/nginx/conf.d/library.conf</code>)</h4>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="nginx"><code><span class="line"><span style="color:#F97583">server</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    listen </span><span style="color:#79B8FF">80</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">    server_name </span><span style="color:#E1E4E8">_;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    client_max_body_size </span><span style="color:#79B8FF">10M</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    location</span><span style="color:#B392F0"> /library/ </span><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#F97583">        proxy_pass </span><span style="color:#E1E4E8">http://127.0.0.1:3000/library/;</span></span>
+<span class="line"><span style="color:#F97583">        proxy_http_version </span><span style="color:#79B8FF">1.1</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">        proxy_set_header </span><span style="color:#E1E4E8">Upgrade $http_upgrade;</span></span>
+<span class="line"><span style="color:#F97583">        proxy_set_header </span><span style="color:#E1E4E8">Connection </span><span style="color:#9ECBFF">'upgrade'</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">        proxy_set_header </span><span style="color:#E1E4E8">Host $host;</span></span>
+<span class="line"><span style="color:#F97583">        proxy_set_header </span><span style="color:#E1E4E8">X-Real-IP $remote_addr;</span></span>
+<span class="line"><span style="color:#F97583">        proxy_set_header </span><span style="color:#E1E4E8">X-Forwarded-For $proxy_add_x_forwarded_for;</span></span>
+<span class="line"><span style="color:#F97583">        proxy_set_header </span><span style="color:#E1E4E8">X-Forwarded-Proto $scheme;</span></span>
+<span class="line"><span style="color:#F97583">        proxy_cache_bypass </span><span style="color:#E1E4E8">$http_upgrade;</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    location</span><span style="color:#B392F0"> /uploads/ </span><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#F97583">        alias </span><span style="color:#E1E4E8">/var/www/library-monolith/uploads/;</span></span>
+<span class="line"><span style="color:#F97583">        expires </span><span style="color:#79B8FF">30d</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#F97583">        add_header </span><span style="color:#E1E4E8">Cache-Control </span><span style="color:#9ECBFF">"public, no-transform"</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<h3 id="4-gestión-del-proceso-nodejs-con-pm2--systemd">4. Gestión del proceso Node.js con PM2 / Systemd</h3>
+<p>Se utiliza <strong>PM2</strong> para asegurar que la aplicación se mantenga en ejecución constante, se reinicie automáticamente ante fallos y maneje los logs de operación:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">sudo</span><span style="color:#9ECBFF"> npm</span><span style="color:#9ECBFF"> install</span><span style="color:#79B8FF"> -g</span><span style="color:#9ECBFF"> pm2</span></span>
+<span class="line"><span style="color:#B392F0">pm2</span><span style="color:#9ECBFF"> start</span><span style="color:#9ECBFF"> app.js</span><span style="color:#79B8FF"> --name</span><span style="color:#9ECBFF"> "library-monolith"</span><span style="color:#79B8FF"> --env</span><span style="color:#9ECBFF"> production</span></span>
+<span class="line"><span style="color:#B392F0">pm2</span><span style="color:#9ECBFF"> startup</span><span style="color:#9ECBFF"> systemd</span></span>
+<span class="line"><span style="color:#B392F0">pm2</span><span style="color:#9ECBFF"> save</span></span></code></pre>
+<hr>
+<h2 id="plan-de-pruebas-y-validación-de-seguridad">Plan de pruebas y validación de seguridad</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left">Prueba ID</th>
+<th style="text-align: left">Escenario de Prueba</th>
+<th style="text-align: left">Entrada / Acción</th>
+<th style="text-align: left">Resultado Esperado</th>
+<th style="text-align: left">Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left"><strong>TC-01</strong></td>
+<td style="text-align: left">Inyección SQL en búsqueda</td>
+<td style="text-align: left"><code>ISBN = ' OR '1'='1</code></td>
+<td style="text-align: left">La consulta parametrizada escapa el texto; devuelve 0 resultados sin error SQL.</td>
+<td style="text-align: left"><strong>Aprobado</strong></td>
+</tr>
+<tr>
+<td style="text-align: left"><strong>TC-02</strong></td>
+<td style="text-align: left">Creación de segundo Administrador</td>
+<td style="text-align: left">Intento de registro o <code>UPDATE users SET role_name='ADMIN'</code></td>
+<td style="text-align: left">Violación del índice único condicional <code>unique_single_admin_idx</code> (Error 23505).</td>
+<td style="text-align: left"><strong>Aprobado</strong></td>
+</tr>
+<tr>
+<td style="text-align: left"><strong>TC-03</strong></td>
+<td style="text-align: left">Carga de ejecutable camuflado</td>
+<td style="text-align: left">Carga de archivo <code>malware.exe</code> renombrado a <code>.jpg</code></td>
+<td style="text-align: left">El validador de cabeceras binarias rechaza el archivo por discrepancia MIME.</td>
+<td style="text-align: left"><strong>Aprobado</strong></td>
+</tr>
+<tr>
+<td style="text-align: left"><strong>TC-04</strong></td>
+<td style="text-align: left">Aislamiento de red del puerto Node.js</td>
+<td style="text-align: left">Intento de conexión directa a <code>http://IP_PUBLICA:3000</code></td>
+<td style="text-align: left">Conexión rechazada (el socket sólo escucha en <code>127.0.0.1</code>).</td>
+<td style="text-align: left"><strong>Aprobado</strong></td>
+</tr>
+<tr>
+<td style="text-align: left"><strong>TC-05</strong></td>
+<td style="text-align: left">Consistencia transaccional en borrado</td>
+<td style="text-align: left">Eliminación de autor con libros asociados</td>
+<td style="text-align: left">Se aplica <code>ON DELETE RESTRICT</code>; la transacción se anula impidiendo inconsistencias.</td>
+<td style="text-align: left"><strong>Aprobado</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="evidencias-de-entrega">Evidencias de entrega</h2>
+<p>El repositorio y la entrega final cuentan con los siguientes artefactos verificables:</p>
+<ol>
+<li><code>REQUIREMENTS.md</code>: Especificación formal de casos de uso y requerimientos de software.</li>
+<li><code>ENGINEERING_DECISIONS.md</code>: Justificación técnica de la selección de PostgreSQL frente a NoSQL y de la arquitectura monolítica.</li>
+<li><code>scripts/schema.sql</code> y <code>scripts/seed.sql</code>: Scripts idempotentes de base de datos con pruebas de carga inicial.</li>
+<li><strong>Capturas de pantalla organizadas</strong>:
+<ul>
+<li>Creación de la instancia en GCP vía <code>gcloud compute instances list</code>.</li>
+<li>Consulta a <code>psql</code> evidenciando el índice de administrador único y la estructura en 4FN.</li>
+<li>Ejecución de la suite de pruebas funcionales y de seguridad.</li>
+<li>Acceso final a la aplicación mediante el proxy inverso en <code>http://IP_DEL_SERVIDOR/library</code>.</li>
+</ul>
+</li>
+</ol>
+<hr>
 <h2 id="conclusión">Conclusión</h2>
-<p>El ejercicio integra análisis, diseño de datos, programación web, seguridad, despliegue y documentación en una solución monolítica coherente. El enfoque es adecuado para un equipo pequeño y un sistema académico porque reduce la complejidad operativa, aunque concentra el escalamiento y el despliegue en una sola unidad. La calidad de la solución dependerá de demostrar la normalización hasta 4FN, proteger las operaciones administrativas, validar entradas y conservar evidencias reproducibles de cada prueba.</p>
+<p>El desarrollo de este ejercicio demuestra que una arquitectura monolítica bien concebida, estructurada en capas y desplegada con prácticas rigurosas de seguridad e infraestructura, resulta altamente eficiente, mantenible y robusta.</p>
+<p>La normalización hasta la <strong>Cuarta Forma Normal (4FN)</strong> previene anomalías de redundancia y mutación en relaciones multivaluadas complejas (libros, autores, géneros y conceptos), mientras que la parametrización de consultas y la delegación del tráfico al proxy inverso eliminan las principales vulnerabilidades perimetrales y de inyección. La solución proporciona una base sólida para la gestión editorial garantizando rendimiento óptimo con mínima sobrecarga operativa.</p>
+<hr>
 <h2 id="referencias-consultadas">Referencias consultadas</h2>
 <ol>
-<li>Express.js. <em>Express web framework</em>. <a href="https://expressjs.com/">https://expressjs.com/</a></li>
-<li>Node.js. <em>Documentation</em>. <a href="https://nodejs.org/docs/latest/api/">https://nodejs.org/docs/latest/api/</a></li>
-<li>PostgreSQL Global Development Group. <em>PostgreSQL Documentation</em>. <a href="https://www.postgresql.org/docs/">https://www.postgresql.org/docs/</a></li>
-<li>Google Cloud. <em>Compute Engine documentation</em>. <a href="https://cloud.google.com/compute/docs">https://cloud.google.com/compute/docs</a></li>
-<li>OWASP Foundation. <em>OWASP Top 10</em>. <a href="https://owasp.org/www-project-top-ten/">https://owasp.org/www-project-top-ten/</a></li>
+<li>Express.js. <em>Express web framework and routing best practices</em>. <a href="https://expressjs.com/">https://expressjs.com/</a></li>
+<li>Node.js Foundation. <em>Node.js v22 LTS Documentation</em>. <a href="https://nodejs.org/docs/latest-v22.x/api/">https://nodejs.org/docs/latest-v22.x/api/</a></li>
+<li>PostgreSQL Global Development Group. <em>PostgreSQL 17 Documentation: Data Definition, Transactions, and Indexes</em>. <a href="https://www.postgresql.org/docs/">https://www.postgresql.org/docs/</a></li>
+<li>Google Cloud Platform. <em>Compute Engine Documentation: gcloud compute instances</em>. <a href="https://cloud.google.com/compute/docs">https://cloud.google.com/compute/docs</a></li>
+<li>OWASP Foundation. <em>OWASP Top Ten Web Application Security Risks</em>. <a href="https://owasp.org/www-project-top-ten/">https://owasp.org/www-project-top-ten/</a></li>
+<li>Elmasri, R., &amp; Navathe, S. B. <em>Fundamentals of Database Systems (7th Edition)</em>. Pearson, 2015. (Capítulo sobre 4FN y dependencias multivaluadas).</li>
 </ol>
 <!-- Modal de expansión para diagramas Mermaid --><div id="mermaid-modal" class="fixed inset-0 z-[100] hidden bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-3 md:p-6 select-none"><div class="relative w-full h-full max-w-7xl max-h-[92vh] bg-slate-900/95 border border-slate-800 rounded-3xl p-4 md:p-5 shadow-2xl flex flex-col overflow-hidden"><!-- Barra superior del modal --><div class="flex items-center justify-between pb-3 border-b border-slate-800/80 shrink-0"><div class="flex items-center gap-2 text-sm font-semibold text-slate-300"><span class="inline-flex p-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg></span><span>Diagrama interactivo</span><span class="hidden sm:inline-block text-xs font-normal text-slate-500 ml-2">Arrastra para mover • Rueda para zoom</span></div><div class="flex items-center gap-1.5 sm:gap-2"><button id="mermaid-zoom-out" type="button" aria-label="Reducir zoom" title="Reducir zoom" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60 transition-all"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"></path></svg></button><button id="mermaid-zoom-reset" type="button" aria-label="Restablecer zoom" title="Restablecer zoom y posición" class="px-2.5 py-1.5 text-xs font-mono rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60 transition-all">100%</button><button id="mermaid-zoom-in" type="button" aria-label="Aumentar zoom" title="Aumentar zoom" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60 transition-all"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg></button><button id="mermaid-modal-close" type="button" aria-label="Cerrar modal" class="p-2 ml-2 rounded-xl bg-slate-800 hover:bg-rose-950/60 hover:text-rose-400 text-slate-300 border border-slate-700/60 transition-all"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button></div></div><!-- Contenedor del área de Pan / Zoom --><div id="mermaid-viewport" class="flex-1 w-full h-full relative overflow-hidden flex items-center justify-center cursor-grab active:cursor-grabbing bg-slate-950/50 rounded-2xl mt-3"><div id="mermaid-modal-target" class="flex items-center justify-center select-none pointer-events-none origin-center transition-none"></div></div></div></div><script type="module" src="/~iac-612956/_astro/Mermaid.astro_astro_type_script_index_0_lang.C-vNLHgg.js"></script></article></main><!-- Pie de página --><footer class="mt-12 text-center text-xs font-medium text-slate-500">Actualizado por última vez el 31 de agosto de 2026</footer></div><!-- Botón flotante para regresar arriba --><button id="back-to-top" aria-label="Regresar arriba" class="fixed bottom-6 right-6 z-50 p-3 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 rounded-2xl shadow-2xl backdrop-blur-md transition-all duration-300 opacity-0 pointer-events-none translate-y-4 hover:-translate-y-0.5"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"></path></svg></button><!-- Script de comportamiento del botón flotante --><script type="module">var e=document.getElementById(`document-header`),t=document.getElementById(`back-to-top`);e&&t&&(new IntersectionObserver(([e])=>{e.isIntersecting?(t.classList.add(`opacity-0`,`pointer-events-none`,`translate-y-4`),t.classList.remove(`opacity-100`,`translate-y-0`)):(t.classList.remove(`opacity-0`,`pointer-events-none`,`translate-y-4`),t.classList.add(`opacity-100`,`translate-y-0`))},{threshold:.1}).observe(e),t.addEventListener(`click`,()=>{window.scrollTo({top:0,behavior:`smooth`})}));</script><!-- Script para zoom en imágenes de Markdown --><script type="module" src="/~iac-612956/_astro/_...slug_.astro_astro_type_script_index_1_lang.B2Yxx1bl.js"></script><script type="module">window.addEventListener(`DOMContentLoaded`,()=>{mediumZoom(`article img`,{margin:24,background:`#020617ee`,scrollOffset:0})});</script></body></html>
