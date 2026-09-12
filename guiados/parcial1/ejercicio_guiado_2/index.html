@@ -74,6 +74,7 @@
 </tbody>
 </table>
 <h3 id="matriz-de-riesgos-de-seguridad-y-mitigaciones-arquitectónicas">Matriz de riesgos de seguridad y mitigaciones arquitectónicas</h3>
+<p>El siguiente diagrama pretende demostrar la macro-arquitectura monolítica de la aplicación a desarrollar. Cabe recalcar que la interfaz, lógica de negocio y acceso a datos pertenecen a una sola unidad desplegable.</p>
 <pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="mermaid"><code><span class="line"><span style="color:#F97583">flowchart</span><span style="color:#B392F0"> TD</span></span>
 <span class="line"><span style="color:#F97583">    subgraph</span><span style="color:#FFAB70"> Amenazas</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"Vectores de Amenaza Identificados"</span><span style="color:#F97583">]</span></span>
 <span class="line"><span style="color:#FFAB70">        T1</span><span style="color:#F97583">[</span><span style="color:#9ECBFF">"SQL Injection (SQLi)"</span><span style="color:#F97583">]</span></span>
@@ -130,6 +131,7 @@
 <span class="line"><span style="color:#FFAB70">    Views </span><span style="color:#F97583">--&gt;|</span><span style="color:#9ECBFF">HTML Renderizado</span><span style="color:#F97583">|</span><span style="color:#FFAB70"> Proxy</span></span>
 <span class="line"><span style="color:#FFAB70">    Proxy </span><span style="color:#F97583">--&gt;|</span><span style="color:#9ECBFF">Respuesta HTTP</span><span style="color:#F97583">|</span><span style="color:#FFAB70"> Client</span></span></code></pre>
 <h3 id="estructura-modular-del-proyecto">Estructura modular del proyecto</h3>
+<p>La siguiente estructura detalla los componentes del repositorio monolítico, en el cual se prioriza una separación de responsabilidades. Al lado de cada carpeta se detalla la responsabilidad que tendra cada una de las carpetas.</p>
 <pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="text"><code><span class="line"><span>library-monolith/</span></span>
 <span class="line"><span>├── config/</span></span>
 <span class="line"><span>│   ├── database.js          # Pool de conexiones pg y configuración de parámetros</span></span>
