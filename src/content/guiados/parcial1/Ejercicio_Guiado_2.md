@@ -59,7 +59,7 @@ Diseñar, construir, probar, desplegar y documentar una aplicación web monolít
 
 ### Matriz de actores, permisos y restricciones
 
-Para el sistema de gestión bibliotecario, se han identificado los siguientes actores como aquellos actores involucrados en la operación de la aplicación. Se define en la siguiente tabla que privilegios y operaciones tienen permitidas, con el objetivo de mantener una trazabilidad de las acciones de los actores en la aplicación a desarrollar. 
+Para el sistema de gestión bibliotecario, se han identificado los siguientes actores como aquellos actores involucrados en la operación de la aplicación. Se define en la siguiente tabla que privilegios y operaciones tienen permitidas, con el objetivo de mantener una trazabilidad de las acciones de los actores en la aplicación a desarrollar.
 
 | **Actor** | **Privilegios y Operaciones Permitidas** | **Restricciones y Respuestas Esperadas** |
 | :--- | :--- | :--- |
@@ -68,6 +68,8 @@ Para el sistema de gestión bibliotecario, se han identificado los siguientes ac
 | **Administrador Único** | • Control total CRUD sobre libros, autores, géneros, formatos, categorías, conceptos e imágenes.<br>• Panel de control de stock y auditoría de sesiones. | • **Invariable**: No puede crear ni promover a un segundo usuario con rol `ADMIN`.<br>• No puede eliminar su propia cuenta si deja al sistema sin administrador activo. |
 
 ### Matriz de riesgos de seguridad y mitigaciones arquitectónicas
+
+El siguiente diagrama pretende demostrar la macro-arquitectura monolítica de la aplicación a desarrollar. Cabe recalcar que la interfaz, lógica de negocio y acceso a datos pertenecen a una sola unidad desplegable. 
 
 ```mermaid
 flowchart TD
@@ -134,6 +136,8 @@ flowchart TB
 ```
 
 ### Estructura modular del proyecto
+
+La siguiente estructura detalla los componentes del repositorio monolítico, en el cual se prioriza una separación de responsabilidades. Al lado de cada carpeta se detalla la responsabilidad que tendra cada una de las carpetas.
 
 ```text
 library-monolith/
