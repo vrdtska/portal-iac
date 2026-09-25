@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT & Microservices Interactive Visualizer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    },
+                    colors: {
+                        darkbg: '#0b0f19',
+                        cardbg: '#151c2c',
+                        cardborder: '#243049',
+                        jwtRed: '#f43f5e',
+                        jwtPurple: '#a855f7',
+                        jwtCyan: '#06b6d4',
+                        jwtGreen: '#10b981'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom Glowing Effect for JWT Parts */
+        .glow-red { box-shadow: 0 0 15px rgba(244, 63, 94, 0.25); }
+        .glow-purple { box-shadow: 0 0 15px rgba(168, 85, 247, 0.25); }
+        .glow-cyan { box-shadow: 0 0 15px rgba(6, 182, 212, 0.25); }
+        .glow-green { box-shadow: 0 0 15px rgba(16, 185, 129, 0.25); }
+        
+        /* Smooth Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #243049;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+
+        /* Flow Canvas Animated Pulse */
+        @keyframes pulseLine {
+            0% { stroke-dashoffset: 20; }
+            100% { stroke-dashoffset: 0; }
+        }
+        .animated-wire {
+            stroke-dasharray: 6;
+            animation: pulseLine 1s linear infinite;
+        }
+
+        /* Packet Traveling Animation */
+        .packet-node {
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+
+    <header class="border-b border-cardborder bg-cardbg/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-rose-500 via-purple-500 to-cyan-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-purple-500/20">
+                    <i class="fa-solid fa-key"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-rose-400 via-purple-300 to-cyan-400 bg-clip-text text-transparent">
+                        JWT & Microservices Explorer
+                    </h1>
+                    <p class="text-xs text-slate-400">Simulador Interactivo de Autenticación REST API & Criptografía</p>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="flex flex-wrap gap-1 bg-darkbg p-1.5 rounded-xl border border-cardborder">
+                <button onclick="switchTab('playground')" id="tab-playground" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all bg-purple-600 text-white shadow-md">
+                    <i class="fa-solid fa-puzzle-piece text-rose-300"></i> Playground JWT
+                </button>
+                <button onclick="switchTab('flow')" id="tab-flow" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-network-wired text-cyan-300"></i> Flujo Microservicios
+                </button>
+                <button onclick="switchTab('crypto')" id="tab-crypto" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-shield-halved text-emerald-300"></i> Algoritmos & Tamper
+                </button>
+                <button onclick="switchTab('refresh')" id="tab-refresh" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-rotate text-amber-300"></i> Refresh & Seguridad
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+
+        <!-- ========================================== -->
+        <!-- TAB 1: PLAYGROUND JWT (DESGLOSE Y CREADOR) -->
+        <!-- ========================================== -->
+        <section id="sec-playground" class="tab-content space-y-6">
+            <!-- Top Controls & Status Bar -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="lg:col-span-2 bg-cardbg border border-cardborder rounded-2xl p-5 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                            <i class="fa-solid fa-code text-cyan-400"></i> Token Codificado en Tiempo Real
+                        </span>
+                        <button onclick="copyCurrentJWT()" class="px-2.5 py-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg flex items-center gap-1.5 transition-all">
+                            <i class="fa-regular fa-copy"></i> <span id="copy-text">Copiar Token</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Token Result Box -->
+                    <div class="p-4 bg-darkbg border border-slate-800 rounded-xl font-mono text-xs sm:text-sm break-all leading-relaxed tracking-wide min-h-[100px] flex items-center">
+                        <p id="encoded-jwt-display">
+                            <span id="encoded-header" class="text-jwtRed hover:underline cursor-pointer font-semibold"></span>.<span id="encoded-payload" class="text-jwtPurple hover:underline cursor-pointer font-semibold"></span>.<span id="encoded-signature" class="text-jwtCyan hover:underline cursor-pointer font-semibold"></span>
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-4 mt-3 text-xs text-slate-400">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-jwtRed inline-block"></span> Header</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-jwtPurple inline-block"></span> Payload</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-jwtCyan inline-block"></span> Signature</span>
+                    </div>
+                </div>
+
+                <!-- Expiration Simulator Card -->
+                <div class="bg-cardbg border border-cardborder rounded-2xl p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                                <i class="fa-solid fa-clock text-amber-400"></i> Simulación de Expiración (`exp`)
+                            </h3>
+                            <span id="exp-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                Token Activo
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4">El claim <code class="text-amber-300 bg-slate-900 px-1 py-0.5 rounded">exp</code> define el tiempo máximo de validez en Unix Timestamp.</p>
+                        
+                        <!-- Countdown Display -->
+                        <div class="text-center py-2 bg-darkbg rounded-xl border border-slate-800 mb-3">
+                            <div id="exp-countdown-text" class="text-2xl font-mono font-bold text-slate-100">00:00:60</div>
+                            <div class="text-[10px] text-slate-500 uppercase tracking-widest mt-0.5">Segundos Restantes</div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-4">
+                            <div id="exp-progress-bar" class="bg-emerald-500 h-full w-full transition-all duration-300"></div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Expiration Buttons -->
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="addExpSeconds(10)" class="py-1.5 px-2 text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 font-medium">
+                            +10 Segs
+                        </button>
+                        <button onclick="addExpSeconds(60)" class="py-1.5 px-2 text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 font-medium">
+                            +1 Minuto
+                        </button>
+                        <button onclick="expireTokenNow()" class="py-1.5 px-2 text-[11px] bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-lg border border-rose-500/40 font-medium">
+                            Expirar Ya
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3 Columns: Header, Payload, Signature Editors -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- 1. Header Column -->
+                <div class="bg-cardbg border border-jwtRed/40 rounded-2xl p-5 glow-red transition-all">
+                    <div class="flex items-center justify-between mb-4 pb-2 border-b border-jwtRed/20">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-jwtRed"></span>
+                            <h3 class="font-bold text-jwtRed text-sm tracking-wide">1. HEADER (Encabezado)</h3>
+                        </div>
+                        <span class="text-[10px] font-mono bg-jwtRed/10 text-jwtRed px-2 py-0.5 rounded border border-jwtRed/30">Algorithm & Typ</span>
+                    </div>
+
+                    <div class="space-y-4 text-xs">
+                        <div>
+                            <label class="block text-slate-400 mb-1 font-medium">Algoritmo de Firma (`alg`):</label>
+                            <select id="header-alg-select" onchange="updateHeaderFromForm()" class="w-full bg-darkbg border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-jwtRed font-mono">
+                                <option value="HS256" selected>HS256 (HMAC + SHA256 - Simétrico)</option>
+                                <option value="RS256">RS256 (RSA + SHA256 - Asimétrico)</option>
+                                <option value="ES256">ES256 (ECDSA + SHA256 - Asimétrico)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-slate-400 mb-1 font-medium">Tipo de Token (`typ`):</label>
+                            <input type="text" id="header-typ-input" value="JWT" oninput="updateHeaderFromForm()" class="w-full bg-darkbg border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-jwtRed font-mono">
+                        </div>
+
+                        <div>
+                            <label class="block text-slate-400 mb-1 font-medium">JSON Vista Previa:</label>
+                            <textarea id="header-json-editor" rows="4" oninput="updateHeaderFromJSON()" class="w-full bg-darkbg border border-slate-800 rounded-xl p-3 font-mono text-jwtRed text-xs focus:outline-none focus:border-jwtRed leading-relaxed resize-none"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Payload Column -->
+                <div class="bg-cardbg border border-jwtPurple/40 rounded-2xl p-5 glow-purple transition-all">
+                    <div class="flex items-center justify-between mb-4 pb-2 border-b border-jwtPurple/20">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-jwtPurple"></span>
+                            <h3 class="font-bold text-jwtPurple text-sm tracking-wide">2. PAYLOAD (Carga Útil)</h3>
+                        </div>
+                        <span class="text-[10px] font-mono bg-jwtPurple/10 text-jwtPurple px-2 py-0.5 rounded border border-jwtPurple/30">Claims / Datos</span>
+                    </div>
+
+                    <div class="space-y-3 text-xs">
+                        <div class="flex flex-wrap gap-1 mb-2">
+                            <button onclick="injectClaim('role', 'admin')" class="px-2 py-1 bg-purple-900/40 hover:bg-purple-900/70 border border-purple-500/30 rounded text-[10px] text-purple-300">
+                                + role: admin
+                            </button>
+                            <button onclick="injectClaim('tenant_id', 'tenant-alpha-9')" class="px-2 py-1 bg-purple-900/40 hover:bg-purple-900/70 border border-purple-500/30 rounded text-[10px] text-purple-300">
+                                + tenant_id
+                            </button>
+                            <button onclick="injectClaim('permissions', ['read:orders', 'write:payments'])" class="px-2 py-1 bg-purple-900/40 hover:bg-purple-900/70 border border-purple-500/30 rounded text-[10px] text-purple-300">
+                                + permissions
+                            </button>
+                        </div>
+
+                        <div>
+                            <label class="block text-slate-400 mb-1 font-medium">JSON Claims (Editable):</label>
+                            <textarea id="payload-json-editor" rows="9" oninput="updatePayloadFromJSON()" class="w-full bg-darkbg border border-slate-800 rounded-xl p-3 font-mono text-jwtPurple text-xs focus:outline-none focus:border-jwtPurple leading-relaxed resize-none"></textarea>
+                        </div>
+                        <div id="payload-error" class="text-[11px] text-rose-400 hidden">
+                            <i class="fa-solid fa-circle-exclamation"></i> JSON Invalido
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Signature Column -->
+                <div class="bg-cardbg border border-jwtCyan/40 rounded-2xl p-5 glow-cyan transition-all">
+                    <div class="flex items-center justify-between mb-4 pb-2 border-b border-jwtCyan/20">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-jwtCyan"></span>
+                            <h3 class="font-bold text-jwtCyan text-sm tracking-wide">3. SIGNATURE (Firma)</h3>
+                        </div>
+                        <span class="text-[10px] font-mono bg-jwtCyan/10 text-jwtCyan px-2 py-0.5 rounded border border-jwtCyan/30">Verificación</span>
+                    </div>
+
+                    <div class="space-y-4 text-xs">
+                        <p class="text-slate-400 leading-relaxed">
+                            La firma garantiza que el mensaje no fue modificado en el camino. Se genera calculando:
+                        </p>
+
+                        <!-- Mathematical Formula Visual -->
+                        <div class="p-3 bg-darkbg rounded-xl border border-slate-800 font-mono text-[11px] text-slate-300 space-y-1">
+                            <div><span id="formula-alg" class="text-cyan-400 font-bold">HMACSHA256</span>(</div>
+                            <div class="pl-3 text-jwtRed">base64UrlEncode(header) + "." +</div>
+                            <div class="pl-3 text-jwtPurple">base64UrlEncode(payload),</div>
+                            <div class="pl-3 text-amber-300 font-bold" id="formula-secret-display">secret_key</div>
+                            <div>)</div>
+                        </div>
+
+                        <!-- Secret Key Field (for HS256) -->
+                        <div id="secret-key-container">
+                            <label class="block text-slate-400 mb-1 font-medium">Clave Secreta (Secret Key):</label>
+                            <div class="relative">
+                                <input type="text" id="secret-key-input" value="super-secreto-microservicios-2026" oninput="updateJWTCalculations()" class="w-full bg-darkbg border border-slate-700 rounded-xl pl-3 pr-8 py-2 text-amber-300 font-mono focus:outline-none focus:border-jwtCyan">
+                                <i class="fa-solid fa-lock absolute right-3 top-2.5 text-slate-500 text-xs"></i>
+                            </div>
+                        </div>
+
+                        <!-- Asymmetric Note (for RS256/ES256) -->
+                        <div id="asymmetric-keys-container" class="hidden space-y-2">
+                            <div class="p-2.5 bg-cyan-950/40 border border-cyan-800/40 rounded-xl text-cyan-200 text-[11px]">
+                                <i class="fa-solid fa-key text-cyan-400 mr-1"></i> <strong>Firma Asimétrica Activa:</strong> El Token se firma con la <span class="text-amber-300 font-bold">Clave Privada</span> del Auth Service y se verifica con la <span class="text-emerald-300 font-bold">Clave Pública (JWKS)</span>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Base64URL Transformation Step-by-Step Breakdown -->
+            <div class="bg-cardbg border border-cardborder rounded-2xl p-5">
+                <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-purple-400"></i> ¿Cómo funciona la Codificación Base64URL?
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <div class="p-3 bg-darkbg rounded-xl border border-slate-800">
+                        <div class="font-semibold text-slate-300 mb-1 text-jwtRed">1. JSON en Texto Plano</div>
+                        <p class="text-slate-400 mb-2">Los datos del Header y Payload se estructuran en objetos JSON estándar.</p>
+                        <code id="b64-step-1" class="text-[11px] font-mono text-slate-300 break-all block p-2 bg-slate-900 rounded"></code>
+                    </div>
+                    <div class="p-3 bg-darkbg rounded-xl border border-slate-800">
+                        <div class="font-semibold text-slate-300 mb-1 text-jwtPurple">2. Conversión Base64 Estándar</div>
+                        <p class="text-slate-400 mb-2">Se convierten los caracteres a bytes UTF-8 y luego a codificación Base64.</p>
+                        <code id="b64-step-2" class="text-[11px] font-mono text-slate-300 break-all block p-2 bg-slate-900 rounded"></code>
+                    </div>
+                    <div class="p-3 bg-darkbg rounded-xl border border-slate-800">
+                        <div class="font-semibold text-slate-300 mb-1 text-jwtCyan">3. Reemplazo a Base64URL Safe</div>
+                        <p class="text-slate-400 mb-2">Se reemplaza <code class="text-amber-300">+</code> por <code class="text-amber-300">-</code>, <code class="text-amber-300">/</code> por <code class="text-amber-300">_</code> y se omiten los rellenos <code class="text-amber-300">=</code> para viajar seguro en URLs/HTTP.</p>
+                        <code id="b64-step-3" class="text-[11px] font-mono text-slate-300 break-all block p-2 bg-slate-900 rounded"></code>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ========================================== -->
+        <!-- TAB 2: FLUJO DE JWT EN MICROSERVICIOS     -->
+        <!-- ========================================== -->
+        <section id="sec-flow" class="tab-content hidden space-y-6">
+            
+            <!-- Scenario Selector & Animation Controls -->
+            <div class="bg-cardbg border border-cardborder rounded-2xl p-5">
+                <div class="flex flex-col lg:flex-row items-center justify-between gap-4 mb-4">
+                    <!-- Scenario Buttons -->
+                    <div class="flex flex-wrap gap-2 w-full lg:w-auto">
+                        <button onclick="setScenario('A')" id="scen-btn-A" class="scen-btn flex-1 lg:flex-initial px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 border transition-all bg-cyan-600/20 text-cyan-300 border-cyan-500">
+                            <i class="fa-solid fa-right-to-bracket"></i> Escenario A: Login & Emisión Token
+                        </button>
+                        <button onclick="setScenario('B')" id="scen-btn-B" class="scen-btn flex-1 lg:flex-initial px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 border transition-all bg-slate-800 text-slate-400 border-slate-700 hover:text-white">
+                            <i class="fa-solid fa-server"></i> Escenario B: Petición a Microservicios
+                        </button>
+                        <button onclick="setScenario('C')" id="scen-btn-C" class="scen-btn flex-1 lg:flex-initial px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 border transition-all bg-slate-800 text-slate-400 border-slate-700 hover:text-white">
+                            <i class="fa-solid fa-arrows-rotate"></i> Escenario C: Expiración & Refresh
+                        </button>
+                    </div>
+
+                    <!-- Playback Controls -->
+                    <div class="flex items-center gap-2 w-full lg:w-auto justify-end">
+                        <button onclick="prevStep()" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-200 text-xs">
+                            <i class="fa-solid fa-backward-step"></i>
+                        </button>
+                        <button onclick="togglePlay()" id="play-pause-btn" class="px-4 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-lg text-xs flex items-center gap-2 transition-all">
+                            <i class="fa-solid fa-play"></i> Reproducir
+                        </button>
+                        <button onclick="nextStep()" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-200 text-xs">
+                            <i class="fa-solid fa-forward-step"></i>
+                        </button>
+                        <button onclick="resetFlow()" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-400 hover:text-white text-xs">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                        
+                        <!-- Speed Selector -->
+                        <select id="speed-select" onchange="changeSpeed()" class="bg-darkbg border border-slate-700 text-slate-300 text-xs rounded-lg px-2 py-2 focus:outline-none">
+                            <option value="1">1x Vel</option>
+                            <option value="1.5">1.5x Vel</option>
+                            <option value="2">2x Vel</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Progress Bar Step Indicator -->
+                <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] font-semibold text-slate-400">
+                        <span id="step-title-display">Paso 1 de 4</span>
+                        <span id="step-description-summary" class="text-cyan-400">Iniciando autenticación...</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-800">
+                        <div id="flow-progress-bar" class="bg-gradient-to-r from-cyan-500 to-purple-500 h-full w-1/4 transition-all duration-300"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Microservices Architectural Canvas -->
+            <div class="bg-cardbg border border-cardborder rounded-2xl p-6 relative overflow-hidden min-h-[380px] flex flex-col justify-between">
+                
+                <!-- Connections SVG Line Overlay -->
+                <svg id="architecture-svg" class="absolute inset-0 w-full h-full pointer-events-none z-0">
+                    <!-- Lines drawn dynamically by JavaScript -->
+                </svg>
+
+                <!-- Animated Moving Packet Indicator -->
+                <div id="anim-packet" class="absolute hidden z-20 w-8 h-8 rounded-full bg-cyan-400 text-slate-950 flex items-center justify-center text-xs font-bold shadow-lg shadow-cyan-500/50 packet-node">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </div>
+
+                <!-- Microservices Grid Layout -->
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 relative z-10 my-auto">
+                    
+                    <!-- Node 1: SPA Client -->
+                    <div id="node-client" class="arch-node bg-darkbg border border-slate-800 p-4 rounded-xl text-center flex flex-col items-center justify-center transition-all duration-300">
+                        <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center text-xl mb-2">
+                            <i class="fa-solid fa-laptop-code"></i>
+                        </div>
+                        <h4 class="font-bold text-xs text-slate-200">Cliente / SPA</h4>
+                        <p class="text-[10px] text-slate-400">React / Vue / Mobile</p>
+                        <span class="mt-2 px-2 py-0.5 bg-slate-800 text-[9px] text-slate-300 rounded font-mono">Port: 3000</span>
+                    </div>
+
+                    <!-- Node 2: API Gateway -->
+                    <div id="node-gateway" class="arch-node bg-darkbg border border-slate-800 p-4 rounded-xl text-center flex flex-col items-center justify-center transition-all duration-300">
+                        <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center text-xl mb-2">
+                            <i class="fa-solid fa-network-wired"></i>
+                        </div>
+                        <h4 class="font-bold text-xs text-slate-200">API Gateway</h4>
+                        <p class="text-[10px] text-slate-400">CORS / Rate Limit</p>
+                        <span class="mt-2 px-2 py-0.5 bg-slate-800 text-[9px] text-slate-300 rounded font-mono">Port: 8000</span>
+                    </div>
+
+                    <!-- Node 3: Auth Service -->
+                    <div id="node-auth" class="arch-node bg-darkbg border border-slate-800 p-4 rounded-xl text-center flex flex-col items-center justify-center transition-all duration-300">
+                        <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400 flex items-center justify-center text-xl mb-2">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
+                        <h4 class="font-bold text-xs text-slate-200">Auth Service</h4>
+                        <p class="text-[10px] text-slate-400">Identity Provider</p>
+                        <span class="mt-2 px-2 py-0.5 bg-slate-800 text-[9px] text-slate-300 rounded font-mono">Port: 4000</span>
+                    </div>
+
+                    <!-- Node 4: Microservice A (Orders) -->
+                    <div id="node-microA" class="arch-node bg-darkbg border border-slate-800 p-4 rounded-xl text-center flex flex-col items-center justify-center transition-all duration-300">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-xl mb-2">
+                            <i class="fa-solid fa-box-archive"></i>
+                        </div>
+                        <h4 class="font-bold text-xs text-slate-200">Microservicio A</h4>
+                        <p class="text-[10px] text-slate-400">Pedidos / Órdenes</p>
+                        <span class="mt-2 px-2 py-0.5 bg-slate-800 text-[9px] text-slate-300 rounded font-mono">Port: 8001</span>
+                    </div>
+
+                    <!-- Node 5: Microservice B (Payments) -->
+                    <div id="node-microB" class="arch-node bg-darkbg border border-slate-800 p-4 rounded-xl text-center flex flex-col items-center justify-center transition-all duration-300">
+                        <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl mb-2">
+                            <i class="fa-solid fa-credit-card"></i>
+                        </div>
+                        <h4 class="font-bold text-xs text-slate-200">Microservicio B</h4>
+                        <p class="text-[10px] text-slate-400">Procesador Pagos</p>
+                        <span class="mt-2 px-2 py-0.5 bg-slate-800 text-[9px] text-slate-300 rounded font-mono">Port: 8002</span>
+                    </div>
+                </div>
+
+                <!-- JWKS Auxiliary Node -->
+                <div class="flex justify-center mt-4 relative z-10">
+                    <div id="node-jwks" class="arch-node bg-darkbg border border-slate-800 px-4 py-2 rounded-xl flex items-center gap-3 transition-all duration-300">
+                        <i class="fa-solid fa-key text-rose-400 text-sm"></i>
+                        <div>
+                            <span class="text-xs font-bold text-slate-300">Endpoint JWKS público:</span>
+                            <code class="text-[10px] text-rose-300 ml-1">GET /.well-known/jwks.json</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lower Row: Step Details + HTTP Real-time Console Log -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Detailed Explanation Card -->
+                <div class="bg-cardbg border border-cardborder rounded-2xl p-5 flex flex-col justify-between">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-cyan-400 bg-cyan-950/60 border border-cyan-800 px-2 py-0.5 rounded">
+                            Explicación del Paso Actual
+                        </span>
+                        <h3 id="step-detail-title" class="text-base font-bold text-slate-100 mt-2 mb-2">
+                            Título del Paso
+                        </h3>
+                        <p id="step-detail-text" class="text-xs text-slate-300 leading-relaxed space-y-2">
+                            Cargando información del flujo...
+                        </p>
+                    </div>
+
+                    <!-- Security Highlight Box -->
+                    <div id="step-security-box" class="mt-4 p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-400">
+                        <i class="fa-solid fa-shield-halved text-emerald-400 mr-1.5"></i>
+                        <span id="step-security-text">Validación local Stateless activa.</span>
+                    </div>
+                </div>
+
+                <!-- HTTP Traffic Logs Console -->
+                <div class="lg:col-span-2 bg-cardbg border border-cardborder rounded-2xl p-5 font-mono">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                            <i class="fa-solid fa-terminal text-emerald-400"></i> Consola de Tráfico HTTP & Cabeceras
+                        </span>
+                        <button onclick="clearConsoleLogs()" class="text-[10px] text-slate-500 hover:text-slate-300">
+                            Limpiar
+                        </button>
+                    </div>
+
+                    <div id="http-console-logs" class="p-3 bg-darkbg border border-slate-800 rounded-xl text-xs h-[200px] overflow-y-auto space-y-2 text-slate-300">
+                        <!-- Logs rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ========================================== -->
+        <!-- TAB 3: ALGORITMOS Y SIMULADOR DE TAMPER   -->
+        <!-- ========================================== -->
+        <section id="sec-crypto" class="tab-content hidden space-y-6">
+            
+            <!-- Comparison Grid: Symmetric vs Asymmetric -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Symmetric HS256 -->
+                <div class="bg-cardbg border border-cardborder rounded-2xl p-5">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-100 text-sm">Cifrado Simétrico (HS256 - HMAC)</h3>
+                            <p class="text-xs text-slate-400">Misma clave para Firmar y Verificar</p>
+                        </div>
+                    </div>
+                    <ul class="text-xs text-slate-300 space-y-2 mb-4 list-disc list-inside">
+                        <li>El <strong>Auth Service</strong> y todos los <strong>Microservicios</strong> deben compartir el mismo secreto (<code class="text-amber-300">Secret Key</code>).</li>
+                        <li>Rápido computacionalmente pero mayor riesgo: Si un microservicio secundario se vulnera, la clave maestra queda expuesta.</li>
+                    </ul>
+                    <div class="p-3 bg-darkbg rounded-xl border border-slate-800 text-[11px] font-mono text-slate-400">
+                        Auth Service [Firma con Secret] 🔑 ──► Microservicio A [Verifica con MISMO Secret] 🔑
+                    </div>
+                </div>
+
+                <!-- Asymmetric RS256 / ES256 -->
+                <div class="bg-cardbg border border-cardborder rounded-2xl p-5">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-building-columns"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-100 text-sm">Cifrado Asimétrico (RS256 / ES256)</h3>
+                            <p class="text-xs text-slate-400">Par de Claves Pública y Privada</p>
+                        </div>
+                    </div>
+                    <ul class="text-xs text-slate-300 space-y-2 mb-4 list-disc list-inside">
+                        <li>El <strong>Auth Service</strong> firma los tokens con la <strong>Clave Privada</strong> secreta.</li>
+                        <li>Los <strong>Microservicios</strong> descargan la <strong>Clave Pública</strong> vía un endpoint público JWKS (<code class="text-cyan-300">/.well-known/jwks.json</code>) y verifican sin conocer la clave privada.</li>
+                    </ul>
+                    <div class="p-3 bg-darkbg rounded-xl border border-slate-800 text-[11px] font-mono text-slate-400">
+                        Auth Service [Firma con Clave Privada 🔐] ──► Microservicio A [Verifica con Clave Pública JWKS 🔓]
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Cryptographic Tamper Simulator -->
+            <div class="bg-cardbg border border-cardborder rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-bug text-rose-400"></i> Simulador de Manipulación (Tampering) en Tiempo Real
+                        </h3>
+                        <p class="text-xs text-slate-400">Intenta alterar los claims del Payload o la clave secreta y observa cómo la firma criptográfica se invalida instantáneamente.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Original Data -->
+                    <div class="space-y-3">
+                        <label class="block text-xs font-bold text-slate-300">Payload Original Emitido por Auth Service:</label>
+                        <textarea id="tamper-payload" rows="5" oninput="runTamperCheck()" class="w-full bg-darkbg border border-slate-700 rounded-xl p-3 font-mono text-xs text-jwtPurple focus:outline-none focus:border-cyan-500">
+{
+  "sub": "usr-10029",
+  "name": "Carlos Gomez",
+  "role": "user",
+  "exp": 1770000000
+}</textarea>
+                        
+                        <label class="block text-xs font-bold text-slate-300">Clave Secreta del Servidor:</label>
+                        <input type="text" id="tamper-secret" value="secreto-maestro-2026" oninput="runTamperCheck()" class="w-full bg-darkbg border border-slate-700 rounded-xl px-3 py-2 font-mono text-xs text-amber-300 focus:outline-none focus:border-cyan-500">
+                    </div>
+
+                    <!-- Verification & Results -->
+                    <div class="flex flex-col justify-between space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Firma Criptográfica resultante:</label>
+                            <div id="tamper-calculated-sig" class="p-3 bg-darkbg border border-slate-800 rounded-xl font-mono text-xs text-jwtCyan break-all">
+                                Calculando firma...
+                            </div>
+                        </div>
+
+                        <!-- Verification Alert Status -->
+                        <div id="tamper-status-box" class="p-4 rounded-xl border flex items-center gap-3 transition-all bg-emerald-950/40 border-emerald-500/40 text-emerald-300">
+                            <i id="tamper-status-icon" class="fa-solid fa-circle-check text-2xl"></i>
+                            <div>
+                                <h4 id="tamper-status-title" class="font-bold text-xs uppercase tracking-wide">Firma Válida</h4>
+                                <p id="tamper-status-desc" class="text-xs text-slate-300">El token es auténtico y no ha sufrido alteraciones.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button onclick="simTamperEscalateRole()" class="flex-1 py-2 px-3 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 rounded-xl text-xs font-semibold">
+                                <i class="fa-solid fa-user-ninja mr-1"></i> Hackear a "admin"
+                            </button>
+                            <button onclick="simTamperReset()" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">
+                                Restaurar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ========================================== -->
+        <!-- TAB 4: REFRESH TOKEN Y SEGURIDAD           -->
+        <!-- ========================================== -->
+        <section id="sec-refresh" class="tab-content hidden space-y-6">
+            
+            <!-- Comparison Matrix: Access Token vs Refresh Token -->
+            <div class="bg-cardbg border border-cardborder rounded-2xl p-6">
+                <h3 class="text-base font-bold text-slate-100 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-scale-balanced text-amber-400"></i> Comparativa: Access Token vs. Refresh Token
+                </h3>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-darkbg text-slate-400 uppercase text-[10px] border-b border-cardborder">
+                            <tr>
+                                <th class="p-3">Atributo</th>
+                                <th class="p-3 text-jwtCyan">Access Token (JWT)</th>
+                                <th class="p-3 text-amber-400">Refresh Token</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-cardborder text-slate-300">
+                            <tr>
+                                <td class="p-3 font-bold text-slate-200">Propósito</td>
+                                <td class="p-3">Autenticar peticiones a los Microservicios.</td>
+                                <td class="p-3">Solicitar un nuevo Access Token al expirar el actual.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-bold text-slate-200">Tiempo de Vida (TTL)</td>
+                                <td class="p-3"><span class="px-2 py-0.5 bg-cyan-950 text-cyan-300 border border-cyan-800 rounded">Muy Corto (~15 minutos)</span></td>
+                                <td class="p-3"><span class="px-2 py-0.5 bg-amber-950 text-amber-300 border border-amber-800 rounded">Largo (~7 a 30 días)</span></td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-bold text-slate-200">Almacenamiento Recomendado</td>
+                                <td class="p-3">Memoria del Cliente / Estado de aplicación (no localStorage).</td>
+                                <td class="p-3">Cookie segura <code class="text-amber-300">HttpOnly</code>, <code class="text-amber-300">Secure</code>, <code class="text-amber-300">SameSite=Strict</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 font-bold text-slate-200">Estado (Statefulness)</td>
+                                <td class="p-3"><strong>Stateless</strong> (No requiere base de datos).</td>
+                                <td class="p-3"><strong>Stateful</strong> (Guardado en Redis / BD para poder revocarse).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Interactive Refresh Token Rotation Simulation -->
+            <div class="bg-cardbg border border-cardborder rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-arrows-spin text-cyan-400"></i> Mecanismo de Rotación de Refresh Tokens (Token Rotation)
+                        </h3>
+                        <p class="text-xs text-slate-400">Prevención de robo: Cada vez que se usa un Refresh Token, este se destruye y se emite uno nuevo. Si un atacante intenta reutilizar un token viejo, se invalida toda la familia de tokens.</p>
+                    </div>
+                </div>
+
+                <!-- Step Diagram of Rotation -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs mb-6">
+                    <div id="rot-step-1" class="p-4 bg-darkbg border border-slate-800 rounded-xl transition-all">
+                        <div class="font-bold text-slate-200 mb-1 flex items-center justify-between">
+                            <span>1. Refresh Normal</span>
+                            <span class="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">RT_01</span>
+                        </div>
+                        <p class="text-slate-400 text-[11px]">El cliente legítimo envía RT_01 al Auth Service para renovar acceso.</p>
+                    </div>
+
+                    <div id="rot-step-2" class="p-4 bg-darkbg border border-slate-800 rounded-xl transition-all">
+                        <div class="font-bold text-slate-200 mb-1 flex items-center justify-between">
+                            <span>2. Rotación Exitosa</span>
+                            <span class="text-[10px] bg-cyan-900 text-cyan-300 px-1.5 py-0.5 rounded">RT_02 Emitido</span>
+                        </div>
+                        <p class="text-slate-400 text-[11px]">Auth Service invalida RT_01, emite el nuevo RT_02 y un nuevo JWT.</p>
+                    </div>
+
+                    <div id="rot-step-3" class="p-4 bg-darkbg border border-slate-800 rounded-xl transition-all">
+                        <div class="font-bold text-slate-200 mb-1 flex items-center justify-between">
+                            <span>3. Detección de Robo</span>
+                            <span class="text-[10px] bg-rose-950 text-rose-300 px-1.5 py-0.5 rounded">Reutilización</span>
+                        </div>
+                        <p class="text-slate-400 text-[11px]">Si un atacante usa el viejo RT_01, el sistema detecta la anomalía y revoca RT_02 e inhabilita la sesión.</p>
+                    </div>
+                </div>
+
+                <!-- Rotation Attack Simulation Trigger -->
+                <div class="p-4 bg-darkbg border border-slate-800 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="text-xs text-slate-300 space-y-1">
+                        <p><strong>Estado del Usuario:</strong> <span id="rot-user-status" class="text-emerald-400 font-bold">Sesión Segura y Activa</span></p>
+                        <p id="rot-family-info" class="text-slate-400">Familia de Tokens: <code class="text-cyan-300">fam_8832</code> | Token Activo: <code class="text-amber-300">RT_02</code></p>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button onclick="simLegitRefresh()" class="py-2 px-3 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 rounded-xl text-xs font-semibold">
+                            <i class="fa-solid fa-rotate mr-1"></i> Renovar Legítimamente
+                        </button>
+                        <button onclick="simAttackerReplay()" class="py-2 px-3 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 rounded-xl text-xs font-semibold">
+                            <i class="fa-solid fa-user-ninja mr-1"></i> Simular Ataque con Token Robado
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="border-t border-cardborder bg-cardbg/50 py-4 text-center text-xs text-slate-500">
+        <p>JWT & Microservices Visualizer • Diseñado para la Enseñanza de Criptografía & REST APIs</p>
+    </footer>
+
+
+    <script>
+        /* ========================================================================== */
+        /* GLOBAL APP STATE & CRYPTO HELPERS                                           */
+        /* ========================================================================== */
+        let state = {
+            activeTab: 'playground',
+            jwt: {
+                header: { alg: 'HS256', typ: 'JWT' },
+                payload: {
+                    sub: '1234567890',
+                    name: 'Ana Martinez',
+                    role: 'admin',
+                    tenant_id: 'tenant-mx-01',
+                    iat: Math.floor(Date.now() / 1000),
+                    exp: Math.floor(Date.now() / 1000) + 60
+                },
+                secret: 'super-secreto-microservicios-2026'
+            },
+            expInterval: null,
+            expTimeLeft: 60,
+            
+            // Flow Engine State
+            flow: {
+                currentScenario: 'A',
+                currentStep: 0,
+                isPlaying: false,
+                speed: 1,
+                timer: null
+            },
+
+            // Rotation State
+            rotation: {
+                familyId: 'fam_8832',
+                activeToken: 'RT_02',
+                oldTokens: ['RT_01'],
+                isBreached: false
+            }
+        };
+
+        // Pure JS SHA-256 for 100% standalone cryptographic execution
+        function sha256(ascii) {
+            function rightRotate(value, amount) {
+                return (value>>>amount) | (value<<(32 - amount));
+            }
+            var mathPow = Math.pow;
+            var maxWord = mathPow(2, 32);
+            var lengthProperty = 'length';
+            var i, j;
+            var result = '';
+            var words = [];
+            var asciiBitLength = ascii[lengthProperty] * 8;
+            var hash = sha256.h = sha256.h || [];
+            var k = sha256.k = sha256.k || [];
+            var primeCounter = k[lengthProperty];
+
+            var isComposite = {};
+            for (var candidate = 2; primeCounter < 64; candidate++) {
+                if (!isComposite[candidate]) {
+                    for (i = 0; i < 300; i += candidate) {
+                        isComposite[i] = true;
+                    }
+                    hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+                    k[primeCounter++] = (mathPow(candidate, 1/3) * maxWord) | 0;
+                }
+            }
+            ascii += '\x80';
+            while (ascii[lengthProperty] % 64 !== 56) ascii += '\x00';
+            for (i = 0; i < ascii[lengthProperty]; i++) {
+                j = ascii.charCodeAt(i);
+                if (j>>8) return ''; 
+                words[i>>2] |= j << ((3 - i%4)*8);
+            }
+            words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
+            words[words[lengthProperty]] = (asciiBitLength | 0);
+
+            for (j = 0; j < words[lengthProperty];) {
+                var w = words.slice(j, j += 16);
+                var oldHash = hash.slice(0);
+
+                for (i = 0; i < 64; i++) {
+                    if (i >= 16) {
+                        var w15 = w[i - 15], w2 = w[i - 2];
+                        var s0 = rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3);
+                        var s1 = rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10);
+                        w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+                    }
+                    var temp1 = (hash[7] + (rightRotate(hash[4], 6) ^ rightRotate(hash[4], 11) ^ rightRotate(hash[4], 25)) +
+                        ((hash[4] & hash[5]) ^ (~hash[4] & hash[6])) + k[i] + w[i]) | 0;
+                    var temp2 = ((rightRotate(hash[0], 2) ^ rightRotate(hash[0], 13) ^ rightRotate(hash[0], 22)) +
+                        ((hash[0] & hash[1]) ^ (hash[0] & hash[2]) ^ (hash[1] & hash[2]))) | 0;
+
+                    hash = [(temp1 + temp2) | 0].concat(hash);
+                    hash[4] = (hash[4] + temp1) | 0;
+                    hash.pop();
+                }
+
+                for (i = 0; i < 8; i++) {
+                    hash[i] = (hash[i] + oldHash[i]) | 0;
+                }
+            }
+
+            for (i = 0; i < 8; i++) {
+                for (j = 3; j >= 0; j--) {
+                    var b = (hash[0] >> (j * 8)) & 255;
+                    result += (b < 16 ? '0' : '') + b.toString(16);
+                }
+            }
+            return result;
+        }
+
+        function hmacSha256Hex(key, message) {
+            var blockSize = 64;
+            if (key.length > blockSize) {
+                key = hexToAscii(sha256(key));
+            }
+            while (key.length < blockSize) {
+                key += '\x00';
+            }
+            var oKeyPad = '', iKeyPad = '';
+            for (var i = 0; i < blockSize; i++) {
+                oKeyPad += String.fromCharCode(key.charCodeAt(i) ^ 0x5c);
+                iKeyPad += String.fromCharCode(key.charCodeAt(i) ^ 0x36);
+            }
+            var innerHash = hexToAscii(sha256(iKeyPad + message));
+            return sha256(oKeyPad + innerHash);
+        }
+
+        function hexToAscii(hex) {
+            var str = '';
+            for (var i = 0; i < hex.length; i += 2) {
+                str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+            }
+            return str;
+        }
+
+        function utf8ToBase64Url(str) {
+            try {
+                var base64 = btoa(unescape(encodeURIComponent(str)));
+                return base64.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+            } catch(e) {
+                return '';
+            }
+        }
+
+        function hexToBase64Url(hex) {
+            var binary = hexToAscii(hex);
+            try {
+                var b64 = btoa(binary);
+                return b64.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+            } catch(e) {
+                return hex.substring(0, 32);
+            }
+        }
+
+        // Tab Navigation
+        function switchTab(tabId) {
+            state.activeTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-purple-600', 'text-white', 'shadow-md');
+                btn.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-800');
+            });
+
+            document.getElementById(`sec-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.add('bg-purple-600', 'text-white', 'shadow-md');
+            activeBtn.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-slate-800');
+
+            if (tabId === 'flow') {
+                setTimeout(drawArchitectureWires, 100);
+            }
+        }
+
+        // JWT Playground Real-time Update Engine
+        function updateJWTCalculations() {
+            const headerStr = JSON.stringify(state.jwt.header);
+            const payloadStr = JSON.stringify(state.jwt.payload);
+
+            const b64Header = utf8ToBase64Url(headerStr);
+            const b64Payload = utf8ToBase64Url(payloadStr);
+
+            state.jwt.secret = document.getElementById('secret-key-input').value;
+
+            let signature = '';
+            if (state.jwt.header.alg === 'HS256') {
+                const message = `${b64Header}.${b64Payload}`;
+                const hexSig = hmacSha256Hex(state.jwt.secret, message);
+                signature = hexToBase64Url(hexSig);
+                
+                document.getElementById('secret-key-container').classList.remove('hidden');
+                document.getElementById('asymmetric-keys-container').classList.add('hidden');
+                document.getElementById('formula-alg').innerText = 'HMACSHA256';
+                document.getElementById('formula-secret-display').innerText = state.jwt.secret || 'secret_key';
+            } else {
+                // Simulated RS256/ES256 asymmetric signature
+                signature = utf8ToBase64Url(`RSA_PRIVATE_KEY_SIGNATURE_HASH_${state.jwt.header.alg}`);
+                document.getElementById('secret-key-container').classList.add('hidden');
+                document.getElementById('asymmetric-keys-container').classList.remove('hidden');
+                document.getElementById('formula-alg').innerText = state.jwt.header.alg;
+                document.getElementById('formula-secret-display').innerText = '[Clave Privada RSA/ECDSA]';
+            }
+
+            // Update Encoded Token Display
+            document.getElementById('encoded-header').innerText = b64Header;
+            document.getElementById('encoded-payload').innerText = b64Payload;
+            document.getElementById('encoded-signature').innerText = signature;
+
+            // Update Base64 Step breakdown
+            document.getElementById('b64-step-1').innerText = payloadStr;
+            document.getElementById('b64-step-2').innerText = btoa(unescape(encodeURIComponent(payloadStr)));
+            document.getElementById('b64-step-3').innerText = b64Payload;
+
+            // Run Tamper Check if active
+            runTamperCheck();
+        }
+
+        function updateHeaderFromForm() {
+            state.jwt.header.alg = document.getElementById('header-alg-select').value;
+            state.jwt.header.typ = document.getElementById('header-typ-input').value;
+            document.getElementById('header-json-editor').value = JSON.stringify(state.jwt.header, null, 2);
+            updateJWTCalculations();
+        }
+
+        function updateHeaderFromJSON() {
+            try {
+                state.jwt.header = JSON.parse(document.getElementById('header-json-editor').value);
+                document.getElementById('header-alg-select').value = state.jwt.header.alg || 'HS256';
+                document.getElementById('header-typ-input').value = state.jwt.header.typ || 'JWT';
+                updateJWTCalculations();
+            } catch(e) {}
+        }
+
+        function updatePayloadFromJSON() {
+            try {
+                state.jwt.payload = JSON.parse(document.getElementById('payload-json-editor').value);
+                document.getElementById('payload-error').classList.add('hidden');
+                if (state.jwt.payload.exp) {
+                    state.expTimeLeft = Math.max(0, state.jwt.payload.exp - Math.floor(Date.now() / 1000));
+                }
+                updateJWTCalculations();
+            } catch(e) {
+                document.getElementById('payload-error').classList.remove('hidden');
+            }
+        }
+
+        function injectClaim(key, value) {
+            state.jwt.payload[key] = value;
+            document.getElementById('payload-json-editor').value = JSON.stringify(state.jwt.payload, null, 2);
+            updateJWTCalculations();
+        }
+
+        // Expiration Countdown Timer
+        function startExpTimer() {
+            if (state.expInterval) clearInterval(state.expInterval);
+
+            state.expInterval = setInterval(() => {
+                if (state.expTimeLeft > 0) {
+                    state.expTimeLeft--;
+                }
+                
+                // Update Payload exp claim in real-time
+                state.jwt.payload.exp = Math.floor(Date.now() / 1000) + state.expTimeLeft;
+                
+                const mins = String(Math.floor(state.expTimeLeft / 60)).padStart(2, '0');
+                const secs = String(state.expTimeLeft % 60).padStart(2, '0');
+                document.getElementById('exp-countdown-text').innerText = `00:${mins}:${secs}`;
+
+                const badge = document.getElementById('exp-badge');
+                const progressBar = document.getElementById('exp-progress-bar');
+                const percent = Math.min(100, (state.expTimeLeft / 60) * 100);
+
+                progressBar.style.width = `${percent}%`;
+
+                if (state.expTimeLeft > 15) {
+                    badge.innerText = 'Token Activo';
+                    badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                    progressBar.className = 'bg-emerald-500 h-full transition-all duration-300';
+                } else if (state.expTimeLeft > 0) {
+                    badge.innerText = 'Expira Pronto';
+                    badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/20 text-amber-400 border border-amber-500/30';
+                    progressBar.className = 'bg-amber-500 h-full transition-all duration-300';
+                } else {
+                    badge.innerText = 'EXPIRED (401)';
+                    badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-rose-500/20 text-rose-400 border border-rose-500/30 animate-pulse';
+                    progressBar.className = 'bg-rose-500 h-full transition-all duration-300';
+                }
+            }, 1000);
+        }
+
+        function addExpSeconds(secs) {
+            state.expTimeLeft += secs;
+            state.jwt.payload.exp = Math.floor(Date.now() / 1000) + state.expTimeLeft;
+            document.getElementById('payload-json-editor').value = JSON.stringify(state.jwt.payload, null, 2);
+            updateJWTCalculations();
+        }
+
+        function expireTokenNow() {
+            state.expTimeLeft = 0;
+            state.jwt.payload.exp = Math.floor(Date.now() / 1000);
+            document.getElementById('payload-json-editor').value = JSON.stringify(state.jwt.payload, null, 2);
+            updateJWTCalculations();
+        }
+
+        function copyCurrentJWT() {
+            const jwtStr = document.getElementById('encoded-jwt-display').innerText;
+            const textarea = document.createElement('textarea');
+            textarea.value = jwtStr;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            const copyText = document.getElementById('copy-text');
+            copyText.innerText = '¡Copiado!';
+            setTimeout(() => copyText.innerText = 'Copiar Token', 2000);
+        }
+
+
+        /* ========================================================================== */
+        /* MICROSERVICES FLOW SIMULATION ENGINE                                        */
+        /* ========================================================================== */
+        const flowScenarios = {
+            'A': {
+                name: 'Login Inicial y Emisión de Token',
+                steps: [
+                    {
+                        title: '1. Credenciales enviadas',
+                        desc: 'El usuario ingresa usuario y contraseña en la SPA. La app envía una petición HTTP POST a /login.',
+                        from: 'node-client',
+                        to: 'node-gateway',
+                        method: 'POST',
+                        url: 'http://api.empresa.com/v1/auth/login',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: { username: 'ana.martinez', password: '••••••••' },
+                        security: 'El tráfico viaja encriptado en TLS/HTTPS.',
+                        logs: 'POST /v1/auth/login -> Gateway enrutando...'
+                    },
+                    {
+                        title: '2. Enrutamiento a Auth Service',
+                        desc: 'El Gateway valida límites de frecuencia (Rate Limiting) y reenvía al Auth Service interno.',
+                        from: 'node-gateway',
+                        to: 'node-auth',
+                        method: 'POST',
+                        url: 'http://auth-service.internal/v1/login',
+                        headers: { 'X-Forwarded-For': '201.140.22.8' },
+                        body: { username: 'ana.martinez' },
+                        security: 'Gateway aísla la red interna de microservicios.',
+                        logs: 'POST /auth-service/login -> Validando credenciales en BD...'
+                    },
+                    {
+                        title: '3. Generación del JWT + Refresh Token',
+                        desc: 'Auth Service valida credenciales, consulta roles y firma un Access Token (JWT) de 15 min + un Refresh Token de 7 días.',
+                        from: 'node-auth',
+                        to: 'node-client',
+                        method: '200 OK',
+                        url: 'HTTP/1.1 200 OK',
+                        headers: { 'Set-Cookie': 'refresh_token=rt_9873a; HttpOnly; Secure' },
+                        body: { access_token: 'eyJhbGciOiJIUzI1NiI...', expires_in: 900 },
+                        security: 'El Refresh Token se guarda en Cookie HttpOnly inmune a ataques XSS.',
+                        logs: '200 OK -> Tokens emitidos con éxito.'
+                    }
+                ]
+            },
+            'B': {
+                name: 'Petición Autenticada y Validación Stateless',
+                steps: [
+                    {
+                        title: '1. Petición con Bearer Token',
+                        desc: 'El cliente adjunta el JWT en la cabecera Authorization: Bearer <JWT> para consultar sus pedidos.',
+                        from: 'node-client',
+                        to: 'node-gateway',
+                        method: 'GET',
+                        url: 'http://api.empresa.com/v1/orders',
+                        headers: { 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiI...' },
+                        body: null,
+                        security: 'Standard Authorization Bearer header.',
+                        logs: 'GET /v1/orders Authorization: Bearer eyJhbG...'
+                    },
+                    {
+                        title: '2. Reenvío al Microservicio A',
+                        desc: 'API Gateway reenvía la petición intacta al Microservicio de Pedidos.',
+                        from: 'node-gateway',
+                        to: 'node-microA',
+                        method: 'GET',
+                        url: 'http://orders-service.internal/orders',
+                        headers: { 'Authorization': 'Bearer eyJhbG...' },
+                        body: null,
+                        security: 'Propagación de token JWT entre servicios.',
+                        logs: 'Enrutando hacia Microservicio A (Pedidos)...'
+                    },
+                    {
+                        title: '3. Validación Stateless de Firma vía JWKS',
+                        desc: 'Microservicio A descarga/consulta las Claves Públicas (JWKS) y verifica la firma del JWT LOCALMENTE. ¡Cero llamadas a la BD de Auth!',
+                        from: 'node-microA',
+                        to: 'node-jwks',
+                        method: 'GET',
+                        url: 'http://auth.internal/.well-known/jwks.json',
+                        headers: {},
+                        body: { keys: [{ kty: 'RSA', kid: 'key-2026', n: '...' }] },
+                        security: 'Verificación 100% Stateless sin cuellos de botella.',
+                        logs: 'JWKS Clave Pública obtenida -> Firma VÁLIDA. Claims verificados.'
+                    },
+                    {
+                        title: '4. Propagación al Microservicio B (Pagos)',
+                        desc: 'Microservicio A requiere datos de pago y reenvía la cabecera Bearer JWT al Microservicio B.',
+                        from: 'node-microA',
+                        to: 'node-microB',
+                        method: 'GET',
+                        url: 'http://payments-service.internal/payments/status',
+                        headers: { 'Authorization': 'Bearer eyJhbG...' },
+                        body: null,
+                        security: 'Contexto de usuario mantenido entre microservicios.',
+                        logs: 'Propagando contexto JWT a Microservicio B...'
+                    },
+                    {
+                        title: '5. Respuesta Exitosa 200 OK',
+                        desc: 'Microservicio B valida el token localmente, retorna los pagos y Microservicio A devuelve la respuesta final al cliente.',
+                        from: 'node-microA',
+                        to: 'node-client',
+                        method: '200 OK',
+                        url: 'HTTP/1.1 200 OK',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: { orders: [{ id: 'ORD-991', amount: 150.00, status: 'PAID' }] },
+                        security: 'Respuesta entregada de forma segura.',
+                        logs: '200 OK -> Petición procesada exitosamente.'
+                    }
+                ]
+            },
+            'C': {
+                name: 'Expiración de Token & Refresh Token Rotation',
+                steps: [
+                    {
+                        title: '1. Petición con JWT Expirado',
+                        desc: 'El cliente envía un JWT cuyo campo `exp` ya pasó en el tiempo.',
+                        from: 'node-client',
+                        to: 'node-microA',
+                        method: 'GET',
+                        url: 'http://api.empresa.com/v1/user/profile',
+                        headers: { 'Authorization': 'Bearer eyJ...[EXPIRED]' },
+                        body: null,
+                        security: 'Detección de tiempo de expiración.',
+                        logs: 'GET /v1/user/profile con token expósito...'
+                    },
+                    {
+                        title: '2. Rechazo 401 Unauthorized',
+                        desc: 'Microservicio A verifica `exp`, detecta token expirado y rechaza la petición con código HTTP 401.',
+                        from: 'node-microA',
+                        to: 'node-client',
+                        method: '401 Unauthorized',
+                        url: 'HTTP/1.1 401 Unauthorized',
+                        headers: {},
+                        body: { error: 'token_expired', message: 'El Access Token ha expirado.' },
+                        security: 'Bloqueo automático de tokens caducados.',
+                        logs: '401 Unauthorized -> Token Expirado.'
+                    },
+                    {
+                        title: '3. Solicitud Silenciosa de Refresh',
+                        desc: 'El interceptor del cliente captura el 401 y envía automáticamente el Refresh Token al Auth Service.',
+                        from: 'node-client',
+                        to: 'node-auth',
+                        method: 'POST',
+                        url: 'http://auth.empresa.com/v1/auth/refresh',
+                        headers: { 'Cookie': 'refresh_token=rt_9873a' },
+                        body: {},
+                        security: 'Uso de Refresh Token para no desloguear al usuario.',
+                        logs: 'POST /v1/auth/refresh enviando Cookie HttpOnly...'
+                    },
+                    {
+                        title: '4. Rotación y Emisión de Nuevo Par',
+                        desc: 'Auth Service destruye el Refresh Token anterior, valida la familia de tokens y emite un nuevo JWT y nuevo Refresh Token.',
+                        from: 'node-auth',
+                        to: 'node-client',
+                        method: '200 OK',
+                        url: 'HTTP/1.1 200 OK',
+                        headers: { 'Set-Cookie': 'refresh_token=rt_9873b; HttpOnly' },
+                        body: { access_token: 'eyJhbG...NEW_TOKEN' },
+                        security: 'Token Rotation activa: RT_9873a invalidado.',
+                        logs: '200 OK -> Nuevo Access Token generado. Petición reintentada.'
+                    }
+                ]
+            }
+        };
+
+        function setScenario(scenKey) {
+            state.flow.currentScenario = scenKey;
+            state.flow.currentStep = 0;
+            
+            document.querySelectorAll('.scen-btn').forEach(btn => {
+                btn.className = 'scen-btn flex-1 lg:flex-initial px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 border transition-all bg-slate-800 text-slate-400 border-slate-700 hover:text-white';
+            });
+            const activeBtn = document.getElementById(`scen-btn-${scenKey}`);
+            activeBtn.className = 'scen-btn flex-1 lg:flex-initial px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 border transition-all bg-cyan-600/20 text-cyan-300 border-cyan-500';
+
+            renderStep();
+        }
+
+        function renderStep() {
+            const scenario = flowScenarios[state.flow.currentScenario];
+            const step = scenario.steps[state.flow.currentStep];
+
+            // Update Progress Bar & Labels
+            document.getElementById('step-title-display').innerText = `Paso ${state.flow.currentStep + 1} de ${scenario.steps.length}`;
+            document.getElementById('step-description-summary').innerText = step.title;
+            
+            const progressPct = ((state.flow.currentStep + 1) / scenario.steps.length) * 100;
+            document.getElementById('flow-progress-bar').style.width = `${progressPct}%`;
+
+            // Update Step Detail Card
+            document.getElementById('step-detail-title').innerText = step.title;
+            document.getElementById('step-detail-text').innerText = step.desc;
+            document.getElementById('step-security-text').innerText = step.security;
+
+            // Highlight Active Nodes
+            document.querySelectorAll('.arch-node').forEach(node => {
+                node.classList.remove('border-cyan-500', 'glow-cyan', 'border-purple-500', 'glow-purple');
+                node.classList.add('border-slate-800');
+            });
+
+            const fromNode = document.getElementById(step.from);
+            const toNode = document.getElementById(step.to);
+
+            if (fromNode) {
+                fromNode.classList.remove('border-slate-800');
+                fromNode.classList.add('border-cyan-500', 'glow-cyan');
+            }
+            if (toNode) {
+                toNode.classList.remove('border-slate-800');
+                toNode.classList.add('border-purple-500', 'glow-purple');
+            }
+
+            // Animate Traveling Packet
+            movePacket(step.from, step.to);
+
+            // Append Log
+            appendConsoleLog(step);
+        }
+
+        function movePacket(fromId, toId) {
+            const fromElem = document.getElementById(fromId);
+            const toElem = document.getElementById(toId);
+            const packet = document.getElementById('anim-packet');
+
+            if (!fromElem || !toElem) return;
+
+            const fromRect = fromElem.getBoundingClientRect();
+            const toRect = toElem.getBoundingClientRect();
+            const parentRect = fromElem.parentElement.parentElement.getBoundingClientRect();
+
+            const startX = fromRect.left + fromRect.width/2 - parentRect.left - 16;
+            const startY = fromRect.top + fromRect.height/2 - parentRect.top - 16;
+            
+            const endX = toRect.left + toRect.width/2 - parentRect.left - 16;
+            const endY = toRect.top + toRect.height/2 - parentRect.top - 16;
+
+            packet.style.left = `${startX}px`;
+            packet.style.top = `${startY}px`;
+            packet.classList.remove('hidden');
+
+            setTimeout(() => {
+                packet.style.left = `${endX}px`;
+                packet.style.top = `${endY}px`;
+            }, 50);
+        }
+
+        function drawArchitectureWires() {
+            const svg = document.getElementById('architecture-svg');
+            if (!svg) return;
+
+            svg.innerHTML = '';
+            
+            const connections = [
+                ['node-client', 'node-gateway'],
+                ['node-gateway', 'node-auth'],
+                ['node-gateway', 'node-microA'],
+                ['node-microA', 'node-microB'],
+                ['node-microA', 'node-jwks']
+            ];
+
+            const parentRect = svg.getBoundingClientRect();
+
+            connections.forEach(([id1, id2]) => {
+                const el1 = document.getElementById(id1);
+                const el2 = document.getElementById(id2);
+
+                if (el1 && el2) {
+                    const r1 = el1.getBoundingClientRect();
+                    const r2 = el2.getBoundingClientRect();
+
+                    const x1 = r1.left + r1.width/2 - parentRect.left;
+                    const y1 = r1.top + r1.height/2 - parentRect.top;
+                    const x2 = r2.left + r2.width/2 - parentRect.left;
+                    const y2 = r2.top + r2.height/2 - parentRect.top;
+
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', x1);
+                    line.setAttribute('y1', y1);
+                    line.setAttribute('x2', x2);
+                    line.setAttribute('y2', y2);
+                    line.setAttribute('stroke', '#334155');
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('class', 'animated-wire');
+                    svg.appendChild(line);
+                }
+            });
+        }
+
+        function appendConsoleLog(step) {
+            const consoleBox = document.getElementById('http-console-logs');
+            const methodColor = step.method.includes('200') ? 'text-emerald-400' : (step.method.includes('401') ? 'text-rose-400' : 'text-cyan-400');
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'p-2 bg-slate-900 border border-slate-800 rounded-lg space-y-1';
+            logEntry.innerHTML = `
+                <div class="flex items-center justify-between text-[11px]">
+                    <span class="font-bold ${methodColor}">${step.method}</span>
+                    <span class="text-slate-500">${step.url}</span>
+                </div>
+                <div class="text-[10px] text-slate-400 font-mono break-all">
+                    ${step.headers ? 'Headers: ' + JSON.stringify(step.headers) : ''}
+                </div>
+                ${step.body ? `<div class="text-[10px] text-purple-300 font-mono">Payload: ${JSON.stringify(step.body)}</div>` : ''}
+            `;
+
+            consoleBox.appendChild(logEntry);
+            consoleBox.scrollTop = consoleBox.scrollHeight;
+        }
+
+        function clearConsoleLogs() {
+            document.getElementById('http-console-logs').innerHTML = '';
+        }
+
+        function togglePlay() {
+            state.flow.isPlaying = !state.flow.isPlaying;
+            const playBtn = document.getElementById('play-pause-btn');
+            
+            if (state.flow.isPlaying) {
+                playBtn.innerHTML = `<i class="fa-solid fa-pause"></i> Pausar`;
+                state.flow.timer = setInterval(() => {
+                    const scenario = flowScenarios[state.flow.currentScenario];
+                    if (state.flow.currentStep < scenario.steps.length - 1) {
+                        state.flow.currentStep++;
+                        renderStep();
+                    } else {
+                        togglePlay();
+                    }
+                }, 3000 / state.flow.speed);
+            } else {
+                playBtn.innerHTML = `<i class="fa-solid fa-play"></i> Reproducir`;
+                clearInterval(state.flow.timer);
+            }
+        }
+
+        function nextStep() {
+            const scenario = flowScenarios[state.flow.currentScenario];
+            if (state.flow.currentStep < scenario.steps.length - 1) {
+                state.flow.currentStep++;
+                renderStep();
+            }
+        }
+
+        function prevStep() {
+            if (state.flow.currentStep > 0) {
+                state.flow.currentStep--;
+                renderStep();
+            }
+        }
+
+        function resetFlow() {
+            if (state.flow.isPlaying) togglePlay();
+            state.flow.currentStep = 0;
+            renderStep();
+        }
+
+        function changeSpeed() {
+            state.flow.speed = parseFloat(document.getElementById('speed-select').value);
+            if (state.flow.isPlaying) {
+                togglePlay();
+                togglePlay();
+            }
+        }
+
+
+        /* ========================================================================== */
+        /* TAMPER SIMULATOR LOGIC                                                      */
+        /* ========================================================================== */
+        function runTamperCheck() {
+            const payloadInput = document.getElementById('tamper-payload').value;
+            const secretInput = document.getElementById('tamper-secret').value;
+            
+            const b64Header = utf8ToBase64Url(JSON.stringify(state.jwt.header));
+            let b64PayloadTampered = '';
+            
+            try {
+                b64PayloadTampered = utf8ToBase64Url(JSON.stringify(JSON.parse(payloadInput)));
+            } catch(e) {
+                b64PayloadTampered = utf8ToBase64Url(payloadInput);
+            }
+
+            const message = `${b64Header}.${b64PayloadTampered}`;
+            const calculatedSig = hexToBase64Url(hmacSha256Hex(secretInput, message));
+            
+            document.getElementById('tamper-calculated-sig').innerText = calculatedSig;
+
+            const isOriginalSecret = secretInput === 'secreto-maestro-2026';
+            const isOriginalRole = payloadInput.includes('"role": "user"');
+
+            const statusBox = document.getElementById('tamper-status-box');
+            const statusIcon = document.getElementById('tamper-status-icon');
+            const statusTitle = document.getElementById('tamper-status-title');
+            const statusDesc = document.getElementById('tamper-status-desc');
+
+            if (isOriginalSecret && isOriginalRole) {
+                statusBox.className = 'p-4 rounded-xl border flex items-center gap-3 transition-all bg-emerald-950/40 border-emerald-500/40 text-emerald-300';
+                statusIcon.className = 'fa-solid fa-circle-check text-2xl text-emerald-400';
+                statusTitle.innerText = 'FIRMA VÁLIDA (200 OK)';
+                statusDesc.innerText = 'El token es auténtico, la firma matemática coincide y los datos no fueron alterados.';
+            } else {
+                statusBox.className = 'p-4 rounded-xl border flex items-center gap-3 transition-all bg-rose-950/40 border-rose-500/40 text-rose-300';
+                statusIcon.className = 'fa-solid fa-triangle-exclamation text-2xl text-rose-400';
+                statusTitle.innerText = '¡ADVERTENCIA! MANIPULACIÓN DETECTADA (401)';
+                statusDesc.innerText = 'La firma calculada no coincide con la original emitida. El microservicio rechaza la petición.';
+            }
+        }
+
+        function simTamperEscalateRole() {
+            try {
+                let p = JSON.parse(document.getElementById('tamper-payload').value);
+                p.role = 'admin';
+                p.permissions = ['ALL_PRIVILEGES'];
+                document.getElementById('tamper-payload').value = JSON.stringify(p, null, 2);
+                runTamperCheck();
+            } catch(e) {}
+        }
+
+        function simTamperReset() {
+            document.getElementById('tamper-payload').value = `{\n  "sub": "usr-10029",\n  "name": "Carlos Gomez",\n  "role": "user",\n  "exp": 1770000000\n}`;
+            document.getElementById('tamper-secret').value = 'secreto-maestro-2026';
+            runTamperCheck();
+        }
+
+
+        /* ========================================================================== */
+        /* TOKEN ROTATION SECURITY ENGINE                                             */
+        /* ========================================================================== */
+        function simLegitRefresh() {
+            if (state.rotation.isBreached) {
+                alert('La familia de tokens está revocada. El usuario debe volver a autenticarse.');
+                return;
+            }
+
+            const currentNum = parseInt(state.rotation.activeToken.split('_')[1]);
+            const nextNum = String(currentNum + 1).padStart(2, '0');
+            const oldToken = state.rotation.activeToken;
+            
+            state.rotation.oldTokens.push(oldToken);
+            state.rotation.activeToken = `RT_${nextNum}`;
+
+            document.getElementById('rot-family-info').innerHTML = `Familia de Tokens: <code class="text-cyan-300">${state.rotation.familyId}</code> | Token Activo: <code class="text-amber-300">${state.rotation.activeToken}</code>`;
+            document.getElementById('rot-user-status').innerText = 'Sesión Segura y Renovada';
+            document.getElementById('rot-user-status').className = 'text-emerald-400 font-bold';
+        }
+
+        function simAttackerReplay() {
+            state.rotation.isBreached = true;
+            document.getElementById('rot-user-status').innerText = '🚨 ATAQUE DETECTADO: FAMILIA DE TOKENS REVOCADA';
+            document.getElementById('rot-user-status').className = 'text-rose-400 font-bold animate-pulse';
+
+            document.getElementById('rot-step-3').className = 'p-4 bg-rose-950/60 border border-rose-500/50 rounded-xl transition-all glow-red';
+            
+            appendConsoleLog({
+                method: 'SECURITY ALERT 401',
+                url: 'http://auth.empresa.com/v1/auth/refresh',
+                headers: { 'Warning': 'Token Reuse Detected' },
+                body: { error: 'token_reuse_detected', revoked_family: state.rotation.familyId }
+            });
+        }
+
+
+        /* ========================================================================== */
+        /* APP INITIALIZATION                                                          */
+        /* ========================================================================== */
+        window.addEventListener('resize', drawArchitectureWires);
+
+        window.onload = function() {
+            // Setup Playground Defaults
+            document.getElementById('header-json-editor').value = JSON.stringify(state.jwt.header, null, 2);
+            document.getElementById('payload-json-editor').value = JSON.stringify(state.jwt.payload, null, 2);
+            
+            updateJWTCalculations();
+            startExpTimer();
+
+            // Setup Flow Scenario Defaults
+            setScenario('A');
+
+            // Setup Tamper Check
+            runTamperCheck();
+        };
+    </script>
+</body>
+</html>
