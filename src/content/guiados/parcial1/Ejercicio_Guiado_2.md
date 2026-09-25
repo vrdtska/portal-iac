@@ -174,7 +174,7 @@ library-monolith/
 │   ├── css/                 # Hojas de estilo estáticas
 │   └── js/                  # Scripts cliente auxiliares
 ├── uploads/                 # Directorio aislado para almacenamiento de imágenes
-├── data/
+├── db/
 │   ├── schema.sql           # Definición de DDL, índices y triggers de 4FN
 │   └── seed.sql             # Datos iniciales para pruebas reproducibles
 ├── .env.example             # Plantilla de variables de entorno (sin credenciales)
@@ -186,7 +186,7 @@ library-monolith/
 
 ## Parte 3: Diseño de datos y proceso formal de normalización hasta 4FN
 
-El modelado relacional parte del análisis de una estructura desnormalizada inicial (con atributos multivaluados y redundancia de catálogo) y se somete a un riguroso proceso de normalización matemática:
+El modelado relacional parte del análisis de una estructura desnormalizada inicial (con atributos multivaluados y redundancia de catálogo) y se somete a un riguroso proceso de normalización matemática. Los pasos detallados a nivel tabla pueden visualizarse en el contenido del documento en docs/
 
 ### 1. Estado Inicial (No Normalizado - 0FN)
 Una tupla típica contiene campos repetitivos y multivaluados como:  
@@ -307,186 +307,43 @@ erDiagram
     }
 ```
 
-### Implementación del DDL y Restricción de Administrador Único
+El esquema DDL para crear la base de datos, su usuario respectivo, generar el esquema en conjunto con las tablas pertinentes a su uso y finalmente, su población, se encuentra en apps/db/*.
 
-```sql
--- Habilitar extensión para UUIDs criptográficos
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
--- Tabla de Usuarios con control de rol
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role_name VARCHAR(20) NOT NULL DEFAULT 'USER' CHECK (role_name IN ('USER', 'ADMIN')),
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
--- Restricción estricta para garantizar un ÚNICO Administrador en todo el sistema
-CREATE UNIQUE INDEX unique_single_admin_idx ON users (role_name) WHERE (role_name = 'ADMIN');
-
--- Catálogos normalizados
-CREATE TABLE categories (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) UNIQUE NOT NULL
-);
-
-CREATE TABLE formats (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(50) UNIQUE NOT NULL
-);
-
-CREATE TABLE authors (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    full_name VARCHAR(200) NOT NULL,
-    country VARCHAR(100)
-);
-
-CREATE TABLE genres (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) UNIQUE NOT NULL
-);
-
-CREATE TABLE concepts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tag_name VARCHAR(100) UNIQUE NOT NULL
-);
-
--- Tabla Principal de Libros (3FN/4FN)
-CREATE TABLE books (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    isbn VARCHAR(17) UNIQUE NOT NULL,
-    title VARCHAR(300) NOT NULL,
-    price NUMERIC(10, 2) NOT NULL CHECK (price >= 0.00),
-    stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
-    category_id UUID REFERENCES categories(id) ON DELETE RESTRICT,
-    format_id UUID REFERENCES formats(id) ON DELETE RESTRICT,
-    synopsis TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
--- Tablas puente para 4FN (Eliminación de dependencias multivaluadas)
-CREATE TABLE book_authors (
-    book_id UUID REFERENCES books(id) ON DELETE CASCADE,
-    author_id UUID REFERENCES authors(id) ON DELETE RESTRICT,
-    author_order SMALLINT DEFAULT 1,
-    PRIMARY KEY (book_id, author_id)
-);
-
-CREATE TABLE book_genres (
-    book_id UUID REFERENCES books(id) ON DELETE CASCADE,
-    genre_id UUID REFERENCES genres(id) ON DELETE RESTRICT,
-    PRIMARY KEY (book_id, genre_id)
-);
-
-CREATE TABLE book_concepts (
-    book_id UUID REFERENCES books(id) ON DELETE CASCADE,
-    concept_id UUID REFERENCES concepts(id) ON DELETE RESTRICT,
-    PRIMARY KEY (book_id, concept_id)
-);
-
--- Gestión de Recursos Multimedia (Imágenes)
-CREATE TABLE book_images (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    book_id UUID REFERENCES books(id) ON DELETE CASCADE,
-    file_name VARCHAR(255) NOT NULL,
-    original_name VARCHAR(255) NOT NULL,
-    mime_type VARCHAR(50) NOT NULL CHECK (mime_type IN ('image/jpeg', 'image/png', 'image/webp')),
-    file_size INTEGER NOT NULL CHECK (file_size <= 2097152), -- Máximo 2MB
-    is_cover BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
--- Índices B-Tree para optimización de consultas de catálogo
-CREATE INDEX idx_books_isbn ON books(isbn);
-CREATE INDEX idx_books_title ON books USING gin(to_tsvector('spanish', title));
-CREATE INDEX idx_book_images_cover ON book_images(book_id) WHERE (is_cover = TRUE);
-```
-
----
+###
 
 ## Parte 4: Implementación, seguridad y buenas prácticas
 
-### 1. Gestión atómica y transaccional del CRUD
-Cuando se registra o edita un libro, la inserción del registro principal y sus tablas intermedias (autores, géneros, conceptos e imágenes) debe ocurrir dentro de una **transacción ACID** en PostgreSQL. Si alguna asociación falla, se ejecuta un `ROLLBACK` completo para evitar registros huérfanos.
+### Justificación de Restricciones, Llaves y Acciones Referenciales
+A continuación se detalla la justificación técnica de la integridad referencial y de dominio implementada en el esquema 01_schema.sql:  
 
-```javascript
-// Ejemplo de inserción transaccional segura en services/bookService.js
-import { pool } from '../config/database.js';
+#### 1. Catálogos y Entidades Independientes (roles, formatos, categorias, autores, generos, conceptos)
+- **PK** (Primary Key): Se utiliza SERIAL (entero autoincremental). Es óptimo para búsquedas, joins y reduce el almacenamiento en comparación con el uso de strings.
+- **UNIQUE**: Se aplica a los campos de nombre (ej. nombre_rol, nombre_formato, termino en conceptos) para evitar duplicidad lógica (por ejemplo, que no existan dos géneros llamados "Ficción").  
+- **ON DELETE / ON UPDATE**: No se define en la tabla origen, sino en las dependencias.
+#### 2. Tabla usuarios
+- **PK**: id_usuario (SERIAL).
+- **UNIQUE**: email, garantizando que no haya dos cuentas con el mismo correo.  
+- **FK**: id_rol referencia a roles(id_rol).  
+- **ON DELETE RESTRICT**: Si intentamos borrar un rol (ej. "Usuario Registrado"), la base de datos lo impedirá si existen usuarios con ese rol asignado. Esto asegura que ningún usuario quede "huérfano" de rol.  
+#### 3. Tabla libros
+- **PK**: isbn (VARCHAR(20)). A diferencia de los catálogos, el ISBN es un identificador natural universal y único que ya viene con el dominio, por lo que es la PK ideal.  
+- **CHECK Constraints**: 
+  - anio >= 1000 AND anio <= 9999: Evita años con formatos ilógicos o typos.  
+  - precio >= 0 y stock >= 0: Asegura la consistencia financiera y de inventario, haciendo imposible que el sistema registre un precio o existencias negativas.  
+- **FKs**: id_formato y id_categoria.  
+-**ON DELETE RESTRICT**: No tiene sentido que se pueda borrar un formato o categoría si hay libros que lo están utilizando, ya que rompería la integridad de la vista del catálogo.
+#### 4. Tablas Puente (libro_autor, libro_genero, libro_concepto, libro_imagenes)
+- **PK**: Es compuesta (ej. PRIMARY KEY (isbn, id_autor)) para garantizar que un mismo autor no pueda asignarse dos veces al mismo libro. La excepción es libro_imagenes que usa un SERIAL porque un libro sí puede tener múltiples imágenes diferentes.  
+- **FKs**: Referencian al libro y a la entidad correspondiente.  
+- **ON DELETE CASCADE**: Tiene total sentido arquitectónico. Si el Administrador elimina un libro, automáticamente deben eliminarse de la base de datos sus asignaciones de autor, género, conceptos y sus imágenes. No queremos guardar relaciones de libros que ya no existen en el catálogo.  
 
-export async function createBookWithRelations(bookData, authorIds, genreIds, conceptIds, files) {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
+#### Defensa contra Múltiples Administradores
 
-    // 1. Insertar libro con parámetros posicionales ($1, $2...)
-    const insertBookSql = `
-      INSERT INTO books (isbn, title, price, stock, category_id, format_id, synopsis)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING id;
-    `;
-    const bookRes = await client.query(insertBookSql, [
-      bookData.isbn,
-      bookData.title,
-      bookData.price,
-      bookData.stock,
-      bookData.categoryId,
-      bookData.formatId,
-      bookData.synopsis
-    ]);
-    const bookId = bookRes.rows[0].id;
+Para cumplir con el requisito de que "sólo podrá existir como máximo un Administrador", se diseñó un Índice Único Parcial (Partial Unique Index)
 
-    // 2. Asociar autores
-    for (const authorId of authorIds) {
-      await client.query(
-        'INSERT INTO book_authors (book_id, author_id) VALUES ($1, $2);',
-        [bookId, authorId]
-      );
-    }
-
-    // 3. Asociar géneros
-    for (const genreId of genreIds) {
-      await client.query(
-        'INSERT INTO book_genres (book_id, genre_id) VALUES ($1, $2);',
-        [bookId, genreId]
-      );
-    }
-
-    // 4. Asociar conceptos temáticos
-    for (const conceptId of conceptIds) {
-      await client.query(
-        'INSERT INTO book_concepts (book_id, concept_id) VALUES ($1, $2);',
-        [bookId, conceptId]
-      );
-    }
-
-    // 5. Registrar metadatos de imágenes si fueron cargadas
-    if (files && files.length > 0) {
-      for (const file of files) {
-        await client.query(
-          `INSERT INTO book_images (book_id, file_name, original_name, mime_type, file_size, is_cover)
-           VALUES ($1, $2, $3, $4, $5, $6);`,
-          [bookId, file.filename, file.originalname, file.mimetype, file.size, file.isCover || false]
-        );
-      }
-    }
-
-    await client.query('COMMIT');
-    return bookId;
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
-}
+``` sql
+CREATE UNIQUE INDEX unico_administrador_idx ON usuarios(id_rol) WHERE id_rol = 1;
 ```
-
-### 2. Tratamiento seguro de subida de imágenes
-* **Validación de tipo binario**: Se evita la inspección superficial por extensión `.jpg`. El middleware `multer` valida la cabecera del archivo y el tipo MIME detectado.
-* **Almacenamiento por UUID**: Los archivos nunca se guardan con el nombre provisto por el usuario para impedir ataques de *Path Traversal* (`../../etc/passwd`).
-* **Directorio fuera del alcance de ejecución**: La carpeta `/uploads` se sirve únicamente como recurso binario estático sin permisos de ejecución de scripts en el servidor web.
-
 ---
 
 ## Parte 5: Infraestructura, despliegue y configuración en GCP
@@ -524,6 +381,8 @@ gcloud compute firewall-rules create allow-http-https \
     --source-ranges=0.0.0.0/0 \
     --target-tags=http-server,https-server
 ```
+
+El último comando detalla una nueva regla para el firewall de la instancia en GCP. Lo que hace es habilitar el ingreso de datos a los puertos 80 y 443, que denotan el protocolo HTTP (para el sitio web) y el protocolo que habilita la entrada de datos al sistema de base de datos de PostgreSQL, respectivamente.
 
 ### 2. Configuración de PostgreSQL en CentOS Stream 10
 
@@ -633,7 +492,7 @@ El repositorio y la entrega final cuentan con los siguientes artefactos verifica
 
 ---
 
-## Conclusión
+## Conclusiones y mejoras continuas
 
 El desarrollo de este ejercicio demuestra que una arquitectura monolítica bien concebida, estructurada en capas y desplegada con prácticas rigurosas de seguridad e infraestructura, resulta altamente eficiente, mantenible y robusta. 
 
